@@ -12,7 +12,6 @@ DWORD _stdcall ThreadFastScan(LPVOID path)
 	Scaner::getpath(path1, path2);
 	Scaner::myfindfile(path1);
 	Scaner::myfindfile(path2);
-	MessageBox(NULL, "常用路径扫描扫描成功!", "成功", NULL);
 	return 0;
 }
 
@@ -20,13 +19,6 @@ DWORD _stdcall ThreadFastScan(LPVOID path)
 DWORD _stdcall ThreadAllScan(LPVOID path)
 {
 	Scaner::myfindfile((char*)path);
-
-	//输出扫描成功提示
-	char* buf = (char*)malloc(20);
-	*((char*)path + 1) = '\0';
-	sprintf(buf, "%s扫描成功", path);
-	MessageBox(NULL, buf, "成功", NULL);
-	free(buf);
 	return 0;
 }
 
@@ -36,6 +28,8 @@ void Scaner::alldiskscan()
 	char* diskname = (char*)malloc(2 * 32);
 	memset(diskname, 0, 32 * 2);
 	getdiskname(diskname);
+
+	HANDLE* hThread = (HANDLE*)malloc(sizeof(HANDLE)*getdiskcount());
 	for (int i = 0; i < getdiskcount(); i++)
 	{
 		char* path = (char*)malloc(3);
@@ -43,14 +37,21 @@ void Scaner::alldiskscan()
 		*(path + 0) = diskname[i * 2];
 		*(path + 1) = ':';
 		*(path + 2) = '\0';
-		CreateThread(NULL, 0, ThreadAllScan, (LPVOID)path, 0, NULL);
+		hThread[i] = CreateThread(NULL, 0, ThreadAllScan, (LPVOID)path, 0, NULL);
 	}
+	WaitForMultipleObjects(getdiskcount(), hThread, TRUE, INFINITE);
+	MessageBoxA(NULL,"全盘扫描成功","成功",0);
+	for (int i = 0; i < getdiskcount(); i++)
+		int ret = CloseHandle(hThread[i]);
+	free(hThread);
 }
 
 //快速扫描调用函数
 void Scaner::fastscan()
 {
-	CreateThread(NULL, 0, ThreadFastScan, NULL, 0, NULL);
+	HANDLE hThread = CreateThread(NULL, 0, ThreadFastScan, NULL, 0, NULL);
+	WaitForSingleObject(hThread,INFINITE);
+	MessageBoxA(NULL, "常用路径扫描完成", "成功", NULL);
 }
 
 //获取用户桌面和文档路径
@@ -155,9 +156,9 @@ void Scaner::myfindfile(const char* path)
 			}
 			else
 			{
-				//判断文件类型	目前扫描6种文件类型（doc，docx，xls，xlsx，pdf，wps）
+				//判断文件类型	目前扫描7种文件类型（doc，docx，xls，xlsx，pdf，wps，ppt，pptx）
 				int ret = Scaner::getfiletype(findFileData.cFileName);
-				if (ret == 1 || ret == 2 || ret == 3 || ret == 4 || ret == 5 || ret == 6)
+				if (ret == 1 || ret == 2 || ret == 3 || ret == 4 || ret == 5 || ret == 6 || ret == 7 || ret == 8)
 				{
 					MyFile* file = (MyFile*)malloc(sizeof(MyFile));
 					memset(file, 0, sizeof(MyFile));
@@ -190,13 +191,14 @@ void Scaner::all2txt(MyFile* file)
 		sprintf(command, ".\\all2txt\\a2tcmd.exe -tdoc \"%s\" \"%s\"\r\n", file->path, destpath);
 	else sprintf(command, ".\\all2txt\\a2tcmd.exe \"%s\" \"%s\"\r\n", file->path, destpath);
 
+	//通过WaitForSingleObject达到阻塞的目的
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
 	ZeroMemory(&si, sizeof(si));
 	ZeroMemory(&pi, sizeof(pi));
 	CreateProcess(".\\\\all2txt\\a2tcmd.exe", command, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
 	WaitForSingleObject(pi.hProcess, 5000);
-	//通过WaitForSingleObject达到阻塞的目的
+	CloseHandle(pi.hProcess);
 
 	free(command);
 }
@@ -244,7 +246,7 @@ void Scaner::findstr(MyFile* file)
 //获取文件后缀类型
 int Scaner::getfiletype(char filename[MAX_PATH])
 {
-	//返回值DOC=1、DOCX=2、XLS=3、XLSX=4、PDF=5、WPS=6
+	//返回值DOC=1、DOCX=2、XLS=3、XLSX=4、PDF=5、WPS=6、PPT=7、PPTX=8
 	for (int i = strlen(filename) - 1;i >= 0; i--)
 	{
 		if (*(filename + i) == '.')
@@ -261,6 +263,10 @@ int Scaner::getfiletype(char filename[MAX_PATH])
 				return 5;
 			if (strcmp(filename + i + 1, "wps") == 0)
 				return 6;
+			if (strcmp(filename + i + 1, "ppt") == 0)
+				return 7;
+			if (strcmp(filename + i + 1, "pptx") == 0)
+				return 8;
 			return 0;
 		}
 	}

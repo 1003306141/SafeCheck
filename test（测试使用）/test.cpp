@@ -2,7 +2,9 @@
 
 int main()
 {
-	printf(".\\");
+	
+	printf("hello,world\n");
+	getchar();
 
 	return 0;
 }

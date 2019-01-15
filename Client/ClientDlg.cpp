@@ -23,7 +23,7 @@ bool CreateTCPServer();
 int Talk2Client();
 DWORD _stdcall Func(void*)
 {
-	Talk2Client();
+	albSockRet = Talk2Client();
 	return 0;
 }
 
@@ -328,7 +328,9 @@ int CClientDlg::ServerLogin()
 		MessageBox("创建本地tcp通道失败", "失败", 0);
 		return FALSE;
 	}
-	CreateThread(NULL, 0, Func, NULL, 0, NULL);
+	HANDLE hThread = CreateThread(NULL, 0, Func, NULL, 0, NULL);
+	
+	DWORD dwRet = WaitForMultipleObjects(1, &hThread, FALSE, INFINITE);
 	if (albSockRet == NONSENSE)
 		MessageBox("正在认证用户名和秘密...");
 	if (albSockRet == CONNECT_FAILED)
@@ -345,11 +347,16 @@ int CClientDlg::ServerLogin()
 		MessageBox("用户名或密码错误！");
 	if (albSockRet == ALREADY_LOGIN)
 		MessageBox("已经登录，不可重复登录！");
+	if ((dwRet == WAIT_OBJECT_0) || (dwRet == WAIT_FAILED))
+		MessageBox("11111111111111！");
 
-	
+	CloseHandle(hThread);
+
 
 	return TRUE;
 }
+
+
 bool CreateTCPServer()
 {
 	if (isTcpChannelUseful)
