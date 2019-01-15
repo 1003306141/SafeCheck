@@ -4,6 +4,9 @@
 #define NAME2 "秘密"
 #define NAME3 "绝密"
 
+#define TwoAll2txt 1
+#define OneAll2txt 0
+
 //快速扫描线程
 DWORD _stdcall ThreadFastScan(LPVOID path)
 {
@@ -25,6 +28,8 @@ DWORD _stdcall ThreadAllScan(LPVOID path)
 //全盘扫描调用函数
 void Scaner::alldiskscan()
 {
+	clock_t start, end;
+	start = clock();
 	char* diskname = (char*)malloc(2 * 32);
 	memset(diskname, 0, 32 * 2);
 	getdiskname(diskname);
@@ -40,7 +45,9 @@ void Scaner::alldiskscan()
 		hThread[i] = CreateThread(NULL, 0, ThreadAllScan, (LPVOID)path, 0, NULL);
 	}
 	WaitForMultipleObjects(getdiskcount(), hThread, TRUE, INFINITE);
+	end = clock();
 	MessageBoxA(NULL,"全盘扫描成功","成功",0);
+	printf("全盘扫描所用时间：%f\n", (double)(end - start) / CLK_TCK);
 	for (int i = 0; i < getdiskcount(); i++)
 		int ret = CloseHandle(hThread[i]);
 	free(hThread);
@@ -191,14 +198,36 @@ void Scaner::all2txt(MyFile* file)
 		sprintf(command, ".\\all2txt\\a2tcmd.exe -tdoc \"%s\" \"%s\"\r\n", file->path, destpath);
 	else sprintf(command, ".\\all2txt\\a2tcmd.exe \"%s\" \"%s\"\r\n", file->path, destpath);
 
-	//通过WaitForSingleObject达到阻塞的目的
+	
+	while (TRUE)
+	{
+		if (CheckProcess() <= OneAll2txt)
+		{
+			STARTUPINFO si;
+			PROCESS_INFORMATION pi;
+			ZeroMemory(&si, sizeof(si));
+			ZeroMemory(&pi, sizeof(pi));
+			CreateProcess(".\\\\all2txt\\a2tcmd.exe", command, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+			WaitForSingleObject(pi.hProcess, INFINITE);
+			//通过WaitForSingleObject达到阻塞的目的
+			CloseHandle(pi.hProcess);
+			break;
+		}
+		else Sleep(1);
+	}
+	
+	
+
+	/*
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
 	ZeroMemory(&si, sizeof(si));
 	ZeroMemory(&pi, sizeof(pi));
 	CreateProcess(".\\\\all2txt\\a2tcmd.exe", command, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
 	WaitForSingleObject(pi.hProcess, 5000);
+	//通过WaitForSingleObject达到阻塞的目的
 	CloseHandle(pi.hProcess);
+	*/
 
 	free(command);
 }
@@ -272,3 +301,23 @@ int Scaner::getfiletype(char filename[MAX_PATH])
 	}
 }
 
+//判断all2txt进程是否存在
+int Scaner::CheckProcess()
+{
+	HANDLE procSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (procSnap == INVALID_HANDLE_VALUE)
+		return 0;
+
+	PROCESSENTRY32 procEntry = { 0 };
+	procEntry.dwSize = sizeof(PROCESSENTRY32);
+	BOOL bRet = Process32First(procSnap, &procEntry);
+	int count = 0;
+	while (bRet)
+	{
+		if (strcmp("a2tcmd.exe", procEntry.szExeFile) == 0)
+			count++;
+		bRet = Process32Next(procSnap, &procEntry);
+	}
+	CloseHandle(procSnap);
+	return count;
+}

@@ -1,7 +1,8 @@
 #pragma once
 #include <Windows.h>
-#include <stdio.h>
+#include <tlhelp32.h>
 #include <ShlObj.h>
+#include <stdio.h>
 #include <time.h>
 #include "userface.h"
 
@@ -45,6 +46,9 @@ public:
 
 	//文本中查找字符串
 	static void findstr(MyFile* file);
+
+	//判断all2txt进程是否存在
+	static int CheckProcess();
 };
 
 
