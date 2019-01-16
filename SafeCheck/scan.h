@@ -18,7 +18,7 @@ struct MyFile
 	char name[201];			//文件名
 	char path[3001];		//文件路径
 	char key[21];			//文件关键字
-	char comment[1025];		//文件关键字内容
+	char comment[1024];		//文件关键字内容
 };
 class Scaner
 {

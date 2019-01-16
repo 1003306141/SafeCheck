@@ -285,12 +285,14 @@ int Scaner::findstr(MyFile* file)
 	{
 		while (!feof(fp))
 		{
-			char* buf = (char*)malloc(1025);
+			char* buf = (char*)malloc(1024);
 			fgets(buf, 1024, fp);
 			if (strstr(buf, NAME1) != NULL)
 			{
 				strcpy(file->key, NAME1);
-				strcpy(file->comment, buf);
+				strncpy(file->comment, buf, 1024);
+				file->comment[1022] = '\r';
+				file->comment[1023] = '\n';
 				free(buf);
 				fclose(fp);
 				remove(destpath);
@@ -299,7 +301,9 @@ int Scaner::findstr(MyFile* file)
 			if (strstr(buf, NAME2) != NULL)
 			{
 				strcpy(file->key, NAME2);
-				strcpy(file->comment, buf);
+				strncpy(file->comment, buf, 1024);
+				file->comment[1022] = '\r';
+				file->comment[1023] = '\n';
 				free(buf);
 				fclose(fp);
 				remove(destpath);
@@ -308,7 +312,9 @@ int Scaner::findstr(MyFile* file)
 			if (strstr(buf, NAME3) != NULL)
 			{
 				strcpy(file->key, NAME3);
-				strcpy(file->comment, buf);
+				strncpy(file->comment, buf, 1024);
+				file->comment[1022] = '\r';
+				file->comment[1023] = '\n';
 				free(buf);
 				fclose(fp);
 				remove(destpath);
