@@ -10,11 +10,7 @@
 //快速扫描线程
 DWORD _stdcall ThreadFastScan(LPVOID path)
 {
-	char path1[MAX_PATH] = { 0 };
-	char path2[MAX_PATH] = { 0 };
-	Scaner::getpath(path1, path2);
-	Scaner::myfindfile(path1);
-	Scaner::myfindfile(path2);
+	Scaner::myfindfile((char*)path);
 	return 0;
 }
 
@@ -56,14 +52,31 @@ void Scaner::alldiskscan()
 //快速扫描调用函数
 void Scaner::fastscan()
 {
-	HANDLE hThread = CreateThread(NULL, 0, ThreadFastScan, NULL, 0, NULL);
-	WaitForSingleObject(hThread,INFINITE);
+	clock_t start, end;
+	HANDLE hThread[2];
+	char* path1 = (char*)malloc(MAX_PATH);
+	char* path2 = (char*)malloc(MAX_PATH);
+	Scaner::getpath(path1, path2);
+
+	start = clock();
+	hThread[0] = CreateThread(NULL, 0, ThreadFastScan, (LPVOID)path1, 0, NULL);
+	hThread[1] = CreateThread(NULL, 0, ThreadFastScan, (LPVOID)path2, 0, NULL);
+	WaitForMultipleObjects(2, hThread, TRUE, INFINITE);
+	end = clock();
+
 	MessageBoxA(NULL, "常用路径扫描完成", "成功", NULL);
+	printf("快速扫描所用时间：%f\n", (double)(end - start) / CLK_TCK);
+
+	CloseHandle(hThread[0]);
+	CloseHandle(hThread[1]);
+	free(path1);
+	free(path2);
 }
 
 //获取用户桌面和文档路径
 void Scaner::getpath(char* path1, char* path2)
 {
+	//path1为文档路径，path2为桌面路径
 	char m_lpszDefaultDir1[MAX_PATH] = { 0 };
 	char szDocument1[MAX_PATH] = { 0 };
 	memset(m_lpszDefaultDir1, 0, MAX_PATH);
@@ -157,7 +170,7 @@ void Scaner::myfindfile(const char* path)
 				if (findFileData.cFileName[0] != '.')
 				{
 					//不是当前目录，也不是上一级目录，就对该目录进行再次扫描
-					if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+					if ((findFileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) || (findFileData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM))
 					{
 						//do nothing
 					}
@@ -217,7 +230,6 @@ void Scaner::all2txt(MyFile* file)
 			ZeroMemory(&pi, sizeof(pi));
 			CreateProcess(".\\\\all2txt\\a2tcmd.exe", command, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
 			WaitForSingleObject(pi.hProcess, 3000);
-			//通过WaitForSingleObject达到阻塞的目的
 			TerminateProcess(pi.hProcess,0);
 			CloseHandle(pi.hProcess);
 			break;
@@ -233,12 +245,12 @@ void Scaner::all2txt(MyFile* file)
 	ZeroMemory(&si, sizeof(si));
 	ZeroMemory(&pi, sizeof(pi));
 	CreateProcess(".\\\\all2txt\\a2tcmd.exe", command, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
-	WaitForSingleObject(pi.hProcess, 3000);
-	TerminateProcess(pi.hProcess, 0);
+	if (WaitForSingleObject(pi.hProcess, 3000) == WAIT_TIMEOUT)
+	{
+		TerminateProcess(pi.hProcess, 0);
+		Sleep(1);
+	}
 	CloseHandle(pi.hProcess);
-	
-	
-
 	free(command);
 }
 
