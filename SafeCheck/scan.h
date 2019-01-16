@@ -15,7 +15,10 @@
 struct MyFile
 {
 	int type;
-	char path[3000];
+	char name[201];			//文件名
+	char path[3001];		//文件路径
+	char key[21];			//文件关键字
+	char comment[1025];		//文件关键字内容
 };
 class Scaner
 {
@@ -45,10 +48,12 @@ public:
 	static void fastscan();
 
 	//文本中查找字符串
-	static void findstr(MyFile* file);
+	static int findstr(MyFile* file);
 
 	//判断all2txt进程是否存在
 	static int CheckProcess();
+
+	static void ChangeFileName(int type);
 };
 
 

@@ -25,11 +25,11 @@ DWORD _stdcall ThreadAllScan(LPVOID path)
 void Scaner::alldiskscan()
 {
 	clock_t start, end;
-	start = clock();
 	char* diskname = (char*)malloc(2 * 32);
 	memset(diskname, 0, 32 * 2);
 	getdiskname(diskname);
 
+	start = clock();
 	HANDLE* hThread = (HANDLE*)malloc(sizeof(HANDLE)*getdiskcount());
 	for (int i = 0; i < getdiskcount(); i++)
 	{
@@ -42,7 +42,9 @@ void Scaner::alldiskscan()
 	}
 	WaitForMultipleObjects(getdiskcount(), hThread, TRUE, INFINITE);
 	end = clock();
-	MessageBoxA(NULL,"全盘扫描成功","成功",0);
+
+	Scaner::ChangeFileName(1);
+	printf("******************************全盘扫描完成******************************\n");
 	printf("全盘扫描所用时间：%f\n", (double)(end - start) / CLK_TCK);
 	for (int i = 0; i < getdiskcount(); i++)
 		int ret = CloseHandle(hThread[i]);
@@ -64,7 +66,8 @@ void Scaner::fastscan()
 	WaitForMultipleObjects(2, hThread, TRUE, INFINITE);
 	end = clock();
 
-	MessageBoxA(NULL, "常用路径扫描完成", "成功", NULL);
+	Scaner::ChangeFileName(0);
+	printf("******************************快速扫描完成******************************\n");
 	printf("快速扫描所用时间：%f\n", (double)(end - start) / CLK_TCK);
 
 	CloseHandle(hThread[0]);
@@ -183,15 +186,32 @@ void Scaner::myfindfile(const char* path)
 			}
 			else
 			{
-				//判断文件类型	目前扫描7种文件类型（doc，docx，xls，xlsx，pdf，wps，ppt，pptx）
+				//判断文件类型	目前扫描8种文件类型（doc，docx，xls，xlsx，pdf，wps，ppt，pptx）
 				int ret = Scaner::getfiletype(findFileData.cFileName);
 				if (ret == 1 || ret == 2 || ret == 3 || ret == 4 || ret == 5 || ret == 6 || ret == 7 || ret == 8)
 				{
 					MyFile* file = (MyFile*)malloc(sizeof(MyFile));
 					memset(file, 0, sizeof(MyFile));
-					sprintf(file->path, "%s\\%s", path, findFileData.cFileName);
+
+					//文件类型赋值
 					file->type = ret;
-					findstr(file);
+					//文件名赋值
+					strcpy(file->name, findFileData.cFileName);
+					//文件路径赋值
+					sprintf(file->path, "%s\\%s", path, findFileData.cFileName);
+					if (findstr(file) == TRUE)
+					{
+						/*
+						HANDLE hFile = CreateFileA(".\\tmp.log", GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
+						CloseHandle(hFile);
+						*/
+						FILE* fp = fopen(".\\tmp.log", "a+");
+						if (fp != NULL)
+						{
+							fprintf(fp, "%s----------%s----------%s----------%s", file->name, file->path, file->key, file->comment);
+							fclose(fp);
+						}
+					}
 					free(file);
 				}
 			}
@@ -215,9 +235,8 @@ void Scaner::all2txt(MyFile* file)
 
 	char* command = (char*)malloc(6000);
 	if (file->type == 6)
-		sprintf(command, ".\\all2txt\\a2tcmd.exe -tdoc \"%s\" \"%s\"\r\n", file->path, destpath);
-	else sprintf(command, ".\\all2txt\\a2tcmd.exe \"%s\" \"%s\"\r\n", file->path, destpath);
-
+		sprintf(command, ".\\all2txt\\a2tcmd.exe -tdoc \"%s\" \"%s\"\n", file->path, destpath);
+	else sprintf(command, ".\\all2txt\\a2tcmd.exe \"%s\" \"%s\"\n", file->path, destpath);
 
 	/*
 	while (TRUE)
@@ -245,7 +264,7 @@ void Scaner::all2txt(MyFile* file)
 	ZeroMemory(&si, sizeof(si));
 	ZeroMemory(&pi, sizeof(pi));
 	CreateProcess(".\\\\all2txt\\a2tcmd.exe", command, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
-	if (WaitForSingleObject(pi.hProcess, 3000) == WAIT_TIMEOUT)
+	if (WaitForSingleObject(pi.hProcess, 5000) == WAIT_TIMEOUT)
 	{
 		TerminateProcess(pi.hProcess, 0);
 		Sleep(1);
@@ -255,7 +274,7 @@ void Scaner::all2txt(MyFile* file)
 }
 
 //在TXT文件中查找关键字
-void Scaner::findstr(MyFile* file)
+int Scaner::findstr(MyFile* file)
 {
 	all2txt(file);
 	char destpath[3000] = { 0 };
@@ -266,15 +285,40 @@ void Scaner::findstr(MyFile* file)
 	{
 		while (!feof(fp))
 		{
-			char* buf = (char*)malloc(1024);
+			char* buf = (char*)malloc(1025);
 			fgets(buf, 1024, fp);
+			if (strstr(buf, NAME1) != NULL)
+			{
+				strcpy(file->key, NAME1);
+				strcpy(file->comment, buf);
+				free(buf);
+				fclose(fp);
+				remove(destpath);
+				return TRUE;
+			}
+			if (strstr(buf, NAME2) != NULL)
+			{
+				strcpy(file->key, NAME2);
+				strcpy(file->comment, buf);
+				free(buf);
+				fclose(fp);
+				remove(destpath);
+				return TRUE;
+			}
+			if (strstr(buf, NAME3) != NULL)
+			{
+				strcpy(file->key, NAME3);
+				strcpy(file->comment, buf);
+				free(buf);
+				fclose(fp);
+				remove(destpath);
+				return TRUE;
+			}
+			/*
 			if (strstr(buf, NAME1) != NULL || strstr(buf, NAME2) != NULL || strstr(buf, NAME3) != NULL)
 			{
+				
 				char findpath[MAX_PATH] = { 0 };
-				time_t timep;
-				struct tm *p;
-				time(&timep);
-				p = gmtime(&timep);
 				sprintf(findpath, ".\\find.log");
 
 				FILE* fp1 = fopen(findpath, "a+");
@@ -287,11 +331,13 @@ void Scaner::findstr(MyFile* file)
 				free(buf);
 				break;
 			}
+			*/
 			free(buf);
 		}
 		fclose(fp);
 	}
 	remove(destpath);
+	return FALSE;
 }
 
 //获取文件后缀类型
@@ -342,4 +388,25 @@ int Scaner::CheckProcess()
 	}
 	CloseHandle(procSnap);
 	return count;
+}
+
+void Scaner::ChangeFileName(int type)
+{
+	//type=1为全盘、type=0为快速
+	time_t timep;
+	struct tm *p;
+	time(&timep);
+	p = gmtime(&timep);
+	char time[1024] = { 0 };
+	if (type == 1)
+	{
+		sprintf(time, "All%d年%d月%d日%d时%d分%d秒.log", 1900 + p->tm_year, 1 + p->tm_mon, p->tm_mday, 8 + p->tm_hour, p->tm_min, p->tm_sec);
+		MoveFileA(".\\tmp.log", time);
+	}
+	else
+	{
+		sprintf(time, "Fast%d年%d月%d日%d时%d分%d秒.log", 1900 + p->tm_year, 1 + p->tm_mon, p->tm_mday, 8 + p->tm_hour, p->tm_min, p->tm_sec);
+		MoveFileA(".\\tmp.log", time);
+	}
+
 }

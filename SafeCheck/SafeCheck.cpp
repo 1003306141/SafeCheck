@@ -8,7 +8,7 @@ int main()
 	{
 		char code;
 		mainface();
-		scanf(" %c", &code);
+		scanf("\n%c", &code);
 		if (code >= '0' && code <= '9')
 		{
 			switch (code)
@@ -17,6 +17,7 @@ int main()
 			{
 				printf("\n现在开始快速扫描......\n");
 				Scaner::fastscan();
+
 			}; break;
 			case '2':
 			{
@@ -33,7 +34,6 @@ int main()
 			}; break;
 			}
 		}
-		else printf("\n输入错误，重新输入\n");
 	}
 	return 0;
 }
