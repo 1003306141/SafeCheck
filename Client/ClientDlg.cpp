@@ -200,6 +200,7 @@ void CClientDlg::OnBnClickedOk()
 	}
 	//MessageBox("登录成功！", "成功", 0);
 }
+
 //检测用户输入是否符合规格
 int CClientDlg::CheckUserInput()
 {
@@ -231,6 +232,7 @@ int CClientDlg::CheckUserInput()
 	}
 	return TRUE;
 }
+
 //检测IP地址是否为服务器IP地址
 int CClientDlg::CheckServerIP()
 {
@@ -295,6 +297,7 @@ int CClientDlg::CheckServerIP()
 	WSACleanup();
 	return ret;
 }
+
 //将IP地址等信息写入配置文件
 int CClientDlg::WriteConfig()
 {
@@ -320,6 +323,7 @@ int CClientDlg::WriteConfig()
 	fclose(fp);
 	return TRUE;
 }
+
 //使用用户名密码登录服务器
 int CClientDlg::ServerLogin()
 {

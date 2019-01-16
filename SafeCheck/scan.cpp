@@ -157,8 +157,15 @@ void Scaner::myfindfile(const char* path)
 				if (findFileData.cFileName[0] != '.')
 				{
 					//不是当前目录，也不是上一级目录，就对该目录进行再次扫描
-					sprintf(subPath, "%s\\%s", path, findFileData.cFileName);
-					myfindfile(subPath);
+					if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+					{
+						//do nothing
+					}
+					else
+					{
+						sprintf(subPath, "%s\\%s", path, findFileData.cFileName);
+						myfindfile(subPath);
+					}
 				}
 			}
 			else
@@ -198,36 +205,39 @@ void Scaner::all2txt(MyFile* file)
 		sprintf(command, ".\\all2txt\\a2tcmd.exe -tdoc \"%s\" \"%s\"\r\n", file->path, destpath);
 	else sprintf(command, ".\\all2txt\\a2tcmd.exe \"%s\" \"%s\"\r\n", file->path, destpath);
 
-	
+
+	/*
 	while (TRUE)
 	{
-		if (CheckProcess() <= OneAll2txt)
+		if (CheckProcess() <= INFINITE)
 		{
 			STARTUPINFO si;
 			PROCESS_INFORMATION pi;
 			ZeroMemory(&si, sizeof(si));
 			ZeroMemory(&pi, sizeof(pi));
 			CreateProcess(".\\\\all2txt\\a2tcmd.exe", command, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
-			WaitForSingleObject(pi.hProcess, INFINITE);
+			WaitForSingleObject(pi.hProcess, 3000);
 			//通过WaitForSingleObject达到阻塞的目的
+			TerminateProcess(pi.hProcess,0);
 			CloseHandle(pi.hProcess);
 			break;
 		}
 		else Sleep(1);
 	}
+	*/
 	
 	
-
-	/*
+	//通过WaitForSingleObject达到阻塞的目的
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
 	ZeroMemory(&si, sizeof(si));
 	ZeroMemory(&pi, sizeof(pi));
 	CreateProcess(".\\\\all2txt\\a2tcmd.exe", command, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
-	WaitForSingleObject(pi.hProcess, 5000);
-	//通过WaitForSingleObject达到阻塞的目的
+	WaitForSingleObject(pi.hProcess, 3000);
+	TerminateProcess(pi.hProcess, 0);
 	CloseHandle(pi.hProcess);
-	*/
+	
+	
 
 	free(command);
 }
