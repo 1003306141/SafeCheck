@@ -57,3 +57,13 @@ public:
 };
 
 
+//遇到这些类型的目录或者文件选择跳过
+/*
+【目录类】
+FILE_ATTRIBUTE_HIDDEN		隐藏目录
+FILE_ATTRIBUTE_REPARSE_POINT	快捷方式目录
+FILE_ATTRIBUTE_SYSTEM		系统目录
+【文件类】
+FILE_ATTRIBUTE_TEMPORARY		临时文件
+FILE_ATTRIBUTE_SYSTEM		系统文件
+*/

@@ -7,15 +7,8 @@
 #define TwoAll2txt 1
 #define OneAll2txt 0
 
-//快速扫描线程
-DWORD _stdcall ThreadFastScan(LPVOID path)
-{
-	Scaner::myfindfile((char*)path);
-	return 0;
-}
-
-//全盘扫描线程
-DWORD _stdcall ThreadAllScan(LPVOID path)
+//只有一个扫描线程
+DWORD _stdcall ThreadScan(LPVOID path)
 {
 	Scaner::myfindfile((char*)path);
 	return 0;
@@ -38,7 +31,7 @@ void Scaner::alldiskscan()
 		*(path + 0) = diskname[i * 2];
 		*(path + 1) = ':';
 		*(path + 2) = '\0';
-		hThread[i] = CreateThread(NULL, 0, ThreadAllScan, (LPVOID)path, 0, NULL);
+		hThread[i] = CreateThread(NULL, 0, ThreadScan, (LPVOID)path, 0, NULL);
 	}
 	WaitForMultipleObjects(getdiskcount(), hThread, TRUE, INFINITE);
 	end = clock();
@@ -61,8 +54,8 @@ void Scaner::fastscan()
 	Scaner::getpath(path1, path2);
 
 	start = clock();
-	hThread[0] = CreateThread(NULL, 0, ThreadFastScan, (LPVOID)path1, 0, NULL);
-	hThread[1] = CreateThread(NULL, 0, ThreadFastScan, (LPVOID)path2, 0, NULL);
+	hThread[0] = CreateThread(NULL, 0, ThreadScan, (LPVOID)path1, 0, NULL);
+	hThread[1] = CreateThread(NULL, 0, ThreadScan, (LPVOID)path2, 0, NULL);
 	WaitForMultipleObjects(2, hThread, TRUE, INFINITE);
 	end = clock();
 
@@ -145,7 +138,7 @@ void Scaner::getdiskname(char* diskname)
 	free(buf);
 }
 
-//核心算法函数，用于遍历文件
+//遍历文件函数，找到特定类型文件并屏蔽无关文件和目录
 void Scaner::myfindfile(const char* path)
 {
 	char* currentpath = (char*)malloc(3000);
@@ -173,7 +166,7 @@ void Scaner::myfindfile(const char* path)
 				if (findFileData.cFileName[0] != '.')
 				{
 					//不是当前目录，也不是上一级目录，就对该目录进行再次扫描
-					if ((findFileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) || (findFileData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM))
+					if ((findFileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) || (findFileData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) || (findFileData.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT))
 					{
 						//do nothing
 					}
@@ -183,9 +176,10 @@ void Scaner::myfindfile(const char* path)
 						myfindfile(subPath);
 					}
 				}
-			}
-			else
+			}	
+			else if( !(findFileData.dwFileAttributes & FILE_ATTRIBUTE_TEMPORARY) && !(findFileData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM))
 			{
+				//不是系统文件也不是临时文件
 				//判断文件类型	目前扫描8种文件类型（doc，docx，xls，xlsx，pdf，wps，ppt，pptx）
 				int ret = Scaner::getfiletype(findFileData.cFileName);
 				if (ret == 1 || ret == 2 || ret == 3 || ret == 4 || ret == 5 || ret == 6 || ret == 7 || ret == 8)
@@ -205,12 +199,18 @@ void Scaner::myfindfile(const char* path)
 						HANDLE hFile = CreateFileA(".\\tmp.log", GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
 						CloseHandle(hFile);
 						*/
-						FILE* fp = fopen(".\\tmp.log", "a+");
+
+						int id = GetCurrentThreadId();
+						char* buf = (char*)malloc(20);
+						memset(buf, 0, 20);
+						sprintf(buf, ".\\%d.tmp.txt", id);
+						FILE* fp = fopen(buf, "a+");
 						if (fp != NULL)
 						{
 							fprintf(fp, "%s----------%s----------%s----------%s", file->name, file->path, file->key, file->comment);
 							fclose(fp);
 						}
+						free(buf);
 					}
 					free(file);
 				}
@@ -295,9 +295,8 @@ int Scaner::findstr(MyFile* file)
 		{
 			strcpy(file->key, NAME1);
 			strcpy(file->comment, buf);
-			file->comment[1021] = '\r';
-			file->comment[1022] = '\n';
-			file->comment[1023] = '\0';
+			if (file->comment[1023] == '\0')
+				file->comment[1022] = '\n';
 
 			free(buf);
 			fclose(fp);
@@ -308,9 +307,8 @@ int Scaner::findstr(MyFile* file)
 		{
 			strcpy(file->key, NAME2);
 			strcpy(file->comment, buf);
-			file->comment[1021] = '\r';
-			file->comment[1022] = '\n';
-			file->comment[1023] = '\0';
+			if (file->comment[1023] == '\0')
+				file->comment[1022] = '\n';
 
 			free(buf);
 			fclose(fp);
@@ -321,9 +319,8 @@ int Scaner::findstr(MyFile* file)
 		{
 			strcpy(file->key, NAME3);
 			strcpy(file->comment, buf);
-			file->comment[1021] = '\r';
-			file->comment[1022] = '\n';
-			file->comment[1023] = '\0';
+			if (file->comment[1023] == '\0')
+				file->comment[1022] = '\n';
 
 			free(buf);
 			fclose(fp);
