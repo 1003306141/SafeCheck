@@ -3,7 +3,7 @@
 
 int main()
 {
+	char* buf = (char*)malloc(100);
 
-	getchar();
 	return 0;
 }

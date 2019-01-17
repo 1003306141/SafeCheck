@@ -281,67 +281,59 @@ int Scaner::findstr(MyFile* file)
 	sprintf(destpath, "%s.txt", file->path);
 
 	FILE* fp = fopen(destpath, "r");
-	if (fp != NULL)
+	if (fp == NULL)
 	{
-		while (!feof(fp))
-		{
-			char* buf = (char*)malloc(1024);
-			fgets(buf, 1024, fp);
-			if (strstr(buf, NAME1) != NULL)
-			{
-				strcpy(file->key, NAME1);
-				strncpy(file->comment, buf, 1024);
-				file->comment[1022] = '\r';
-				file->comment[1023] = '\n';
-				free(buf);
-				fclose(fp);
-				remove(destpath);
-				return TRUE;
-			}
-			if (strstr(buf, NAME2) != NULL)
-			{
-				strcpy(file->key, NAME2);
-				strncpy(file->comment, buf, 1024);
-				file->comment[1022] = '\r';
-				file->comment[1023] = '\n';
-				free(buf);
-				fclose(fp);
-				remove(destpath);
-				return TRUE;
-			}
-			if (strstr(buf, NAME3) != NULL)
-			{
-				strcpy(file->key, NAME3);
-				strncpy(file->comment, buf, 1024);
-				file->comment[1022] = '\r';
-				file->comment[1023] = '\n';
-				free(buf);
-				fclose(fp);
-				remove(destpath);
-				return TRUE;
-			}
-			/*
-			if (strstr(buf, NAME1) != NULL || strstr(buf, NAME2) != NULL || strstr(buf, NAME3) != NULL)
-			{
-				
-				char findpath[MAX_PATH] = { 0 };
-				sprintf(findpath, ".\\find.log");
-
-				FILE* fp1 = fopen(findpath, "a+");
-				if (fp1 != NULL)
-				{
-					fprintf(fp1, "%s----------%s", file->path, buf);
-					printf("---------------------------------------------------------------------------------------------------------------------------------找到啦！\n");
-					fclose(fp1);
-				}
-				free(buf);
-				break;
-			}
-			*/
-			free(buf);
-		}
-		fclose(fp);
+		remove(destpath);
+		return FALSE;
 	}
+	while (!feof(fp))
+	{
+		char* buf = (char*)malloc(1024);
+		memset(buf, 0, 1024);
+		fgets(buf, 1024, fp);
+		if (strstr(buf, NAME1) != NULL)
+		{
+			strcpy(file->key, NAME1);
+			strcpy(file->comment, buf);
+			file->comment[1021] = '\r';
+			file->comment[1022] = '\n';
+			file->comment[1023] = '\0';
+
+			free(buf);
+			fclose(fp);
+			remove(destpath);
+			return TRUE;
+		}
+		if (strstr(buf, NAME2) != NULL)
+		{
+			strcpy(file->key, NAME2);
+			strcpy(file->comment, buf);
+			file->comment[1021] = '\r';
+			file->comment[1022] = '\n';
+			file->comment[1023] = '\0';
+
+			free(buf);
+			fclose(fp);
+			remove(destpath);
+			return TRUE;
+		}
+		if (strstr(buf, NAME3) != NULL)
+		{
+			strcpy(file->key, NAME3);
+			strcpy(file->comment, buf);
+			file->comment[1021] = '\r';
+			file->comment[1022] = '\n';
+			file->comment[1023] = '\0';
+
+			free(buf);
+			fclose(fp);
+			remove(destpath);
+			return TRUE;
+		}
+		free(buf);
+	}
+
+	fclose(fp);
 	remove(destpath);
 	return FALSE;
 }
@@ -414,5 +406,4 @@ void Scaner::ChangeFileName(int type)
 		sprintf(time, "Fast%d年%d月%d日%d时%d分%d秒.log", 1900 + p->tm_year, 1 + p->tm_mon, p->tm_mday, 8 + p->tm_hour, p->tm_min, p->tm_sec);
 		MoveFileA(".\\tmp.log", time);
 	}
-
 }
