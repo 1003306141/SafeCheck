@@ -1,9 +1,14 @@
 ﻿#include "scan.h"
 
+//禁止多开
+int MoreOpen();
+//交互菜单页面
 void mainface();
 
 int main()
 {
+	if (MoreOpen() == TRUE)
+		return 0;
 	while (1)
 	{
 		char code;
@@ -46,4 +51,15 @@ void mainface()
 	printf("           0.退出程序           \n");
 	printf("--------------------------------\n");
 	printf("请输入您的操作: ");
+}
+
+int MoreOpen()
+{
+	HANDLE g_hMutex = CreateMutexA(NULL, TRUE, "防止多开");
+	DWORD dwRet = GetLastError();
+	if (g_hMutex == NULL)
+		return TRUE;
+	else if (dwRet == ERROR_ALREADY_EXISTS)
+		return TRUE;
+	return FALSE;
 }
