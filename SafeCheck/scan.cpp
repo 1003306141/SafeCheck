@@ -1,11 +1,13 @@
 #include "scan.h"
 
-#define NAME1 "机密"
-#define NAME2 "秘密"
-#define NAME3 "绝密"
-
 #define TwoAll2txt 1
 #define OneAll2txt 0
+
+//全局关键字
+MyKey mykey;
+
+//定义容器，用于存储存储找到的文件信息
+vector<MyFile> v;
 
 //只有一个扫描线程
 DWORD _stdcall ThreadScan(LPVOID path)
@@ -17,6 +19,8 @@ DWORD _stdcall ThreadScan(LPVOID path)
 //全盘扫描调用函数
 void Scaner::alldiskscan()
 {
+	Scaner::GetKeyConfig();
+
 	clock_t start, end;
 	char* diskname = (char*)malloc(2 * 32);
 	memset(diskname, 0, 32 * 2);
@@ -36,17 +40,20 @@ void Scaner::alldiskscan()
 	WaitForMultipleObjects(getdiskcount(), hThread, TRUE, INFINITE);
 	end = clock();
 
-	Scaner::ChangeFileName(1);
 	printf("******************************全盘扫描完成******************************\n");
 	printf("全盘扫描所用时间：%f\n", (double)(end - start) / CLK_TCK);
 	for (int i = 0; i < getdiskcount(); i++)
 		int ret = CloseHandle(hThread[i]);
 	free(hThread);
+
+	Scaner::CreateLog(1);
 }
 
 //快速扫描调用函数
 void Scaner::fastscan()
 {
+	Scaner::GetKeyConfig();
+
 	clock_t start, end;
 	HANDLE hThread[2];
 	char* path1 = (char*)malloc(MAX_PATH);
@@ -59,14 +66,14 @@ void Scaner::fastscan()
 	WaitForMultipleObjects(2, hThread, TRUE, INFINITE);
 	end = clock();
 
-	Scaner::ChangeFileName(0);
 	printf("******************************快速扫描完成******************************\n");
 	printf("快速扫描所用时间：%f\n", (double)(end - start) / CLK_TCK);
-
 	CloseHandle(hThread[0]);
 	CloseHandle(hThread[1]);
 	free(path1);
 	free(path2);
+
+	Scaner::CreateLog(0);
 }
 
 //获取用户桌面和文档路径
@@ -193,20 +200,9 @@ void Scaner::myfindfile(const char* path)
 					strcpy(file->name, findFileData.cFileName);
 					//文件路径赋值
 					sprintf(file->path, "%s\\%s", path, findFileData.cFileName);
+
 					if (findstr(file) == TRUE)
-					{
-						int id = GetCurrentThreadId();
-						char* buf = (char*)malloc(20);
-						memset(buf, 0, 20);
-						sprintf(buf, ".\\%d.tmp.txt", id);
-						FILE* fp = fopen(buf, "a+");
-						if (fp != NULL)
-						{
-							fprintf(fp, "%s----------%s----------%s----------%s", file->name, file->path, file->key, file->comment);
-							fclose(fp);
-						}
-						free(buf);
-					}
+						v.push_back(*file);
 					free(file);
 				}
 			}
@@ -257,7 +253,7 @@ void Scaner::all2txt(MyFile* file)
 	ZeroMemory(&si, sizeof(si));
 	ZeroMemory(&pi, sizeof(pi));
 	CreateProcess(".\\\\all2txt\\a2tcmd.exe", command, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
-	if (WaitForSingleObject(pi.hProcess, 5000) == WAIT_TIMEOUT)
+	if (WaitForSingleObject(pi.hProcess, 3000) == WAIT_TIMEOUT)
 	{
 		TerminateProcess(pi.hProcess, 0);
 		Sleep(1);
@@ -284,41 +280,20 @@ int Scaner::findstr(MyFile* file)
 		char* buf = (char*)malloc(4096);
 		memset(buf, 0, 4096);
 		fgets(buf, 4096, fp);
-		if (strstr(buf, NAME1) != NULL)
+		for (int i = 0; i < mykey.count; i++)
 		{
-			strcpy(file->key, NAME1);
-			strcpy(file->comment, buf);
-			if (file->comment[4095] == '\0')
-				file->comment[4094] = '\n';
+			if (strstr(buf, mykey.Key[i]) != NULL)
+			{
+				strcpy(file->key, mykey.Key[i]);
+				strcpy(file->comment, buf);
+				if (file->comment[4095] == '\0')
+					file->comment[4094] = '\n';
 
-			free(buf);
-			fclose(fp);
-			remove(destpath);
-			return TRUE;
-		}
-		if (strstr(buf, NAME2) != NULL)
-		{
-			strcpy(file->key, NAME2);
-			strcpy(file->comment, buf);
-			if (file->comment[4095] == '\0')
-				file->comment[4094] = '\n';
-
-			free(buf);
-			fclose(fp);
-			remove(destpath);
-			return TRUE;
-		}
-		if (strstr(buf, NAME3) != NULL)
-		{
-			strcpy(file->key, NAME3);
-			strcpy(file->comment, buf);
-			if (file->comment[4095] == '\0')
-				file->comment[4094] = '\n';
-
-			free(buf);
-			fclose(fp);
-			remove(destpath);
-			return TRUE;
+				free(buf);
+				fclose(fp);
+				remove(destpath);
+				return TRUE;
+			}
 		}
 		free(buf);
 	}
@@ -378,7 +353,8 @@ int Scaner::CheckProcess()
 	return count;
 }
 
-void Scaner::ChangeFileName(int type)
+//生成扫描时间的日志文件
+void Scaner::CreateLog(int type)
 {
 	//type=1为全盘、type=0为快速
 	time_t timep;
@@ -387,13 +363,52 @@ void Scaner::ChangeFileName(int type)
 	p = gmtime(&timep);
 	char time[1024] = { 0 };
 	if (type == 1)
-	{
 		sprintf(time, "All%d年%d月%d日%d时%d分%d秒.log", 1900 + p->tm_year, 1 + p->tm_mon, p->tm_mday, 8 + p->tm_hour, p->tm_min, p->tm_sec);
-		MoveFileA(".\\tmp.log", time);
-	}
 	else
-	{
 		sprintf(time, "Fast%d年%d月%d日%d时%d分%d秒.log", 1900 + p->tm_year, 1 + p->tm_mon, p->tm_mday, 8 + p->tm_hour, p->tm_min, p->tm_sec);
-		MoveFileA(".\\tmp.log", time);
-	}
+	
+	//生成日志文件
+	FILE* fp;
+	fp = fopen(time, "a+");
+	if (fp != NULL)
+		for (int i = 0; i < v.size(); i++)
+			fprintf(fp, "%s------%s------%s------%s", v[i].name, v[i].path, v[i].key, v[i].comment);
+	fclose(fp);
+	
+	//清除元素并回收内存
+	//vector<MyFile>().swap(v);
+	v.clear();
 }
+
+//更新关键字
+void Scaner::GetKeyConfig()
+{
+	for (int i = 0; i < 100; i++)
+		mykey.Key[i] = (char*)malloc(20);
+	FILE* fp;
+	fp = fopen("key.ini", "r");
+	if (fp == NULL)
+	{
+		mykey.count = 3;
+		mykey.Key[0] = "秘密";
+		mykey.Key[1] = "机密";
+		mykey.Key[2] = "绝密";
+
+		//不存在文件则默认生成一个关键字文件
+		FILE* fp2 = fopen("key.ini", "w");
+		if (fp2 != NULL)
+		{
+			for (int i = 0; i < mykey.count; i++)
+				fprintf(fp2, "%s\n", mykey.Key[i]);
+			fclose(fp2);
+		}
+		return;
+	}
+	int count = 0;
+	while (!feof(fp))
+		fscanf(fp, "%s", mykey.Key[count++]);
+	mykey.count = count;
+	fclose(fp);
+}
+
+

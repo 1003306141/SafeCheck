@@ -4,12 +4,20 @@
 #include <ShlObj.h>
 #include <stdio.h>
 #include <time.h>
-#include "userface.h"
-
+#include <vector>
+using namespace std;
 
 #pragma comment  (lib,"User32.lib")
 #pragma comment  (lib,"Gdi32.lib")
 #pragma comment	 (lib, "shell32.lib")
+
+
+//**********关键字结构体**************
+struct MyKey
+{
+	int count;
+	char* Key[100];
+};
 
 //**********对扫描功能的声明**************
 struct MyFile
@@ -53,7 +61,12 @@ public:
 	//判断all2txt进程是否存在
 	static int CheckProcess();
 
-	static void ChangeFileName(int type);
+	//生成扫描时间的日志文件
+	static void CreateLog(int type);
+
+	//更新关键字
+	static void GetKeyConfig();
+
 };
 
 
@@ -67,3 +80,4 @@ FILE_ATTRIBUTE_SYSTEM		系统目录
 FILE_ATTRIBUTE_TEMPORARY		临时文件
 FILE_ATTRIBUTE_SYSTEM		系统文件
 */
+

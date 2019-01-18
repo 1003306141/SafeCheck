@@ -21,14 +21,8 @@
     <ClCompile Include="scan.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="userface.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="userface.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="scan.h">
       <Filter>头文件</Filter>
     </ClInclude>
