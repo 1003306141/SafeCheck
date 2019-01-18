@@ -195,11 +195,6 @@ void Scaner::myfindfile(const char* path)
 					sprintf(file->path, "%s\\%s", path, findFileData.cFileName);
 					if (findstr(file) == TRUE)
 					{
-						/*
-						HANDLE hFile = CreateFileA(".\\tmp.log", GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
-						CloseHandle(hFile);
-						*/
-
 						int id = GetCurrentThreadId();
 						char* buf = (char*)malloc(20);
 						memset(buf, 0, 20);
@@ -257,8 +252,6 @@ void Scaner::all2txt(MyFile* file)
 	}
 	*/
 	
-	
-	//通过WaitForSingleObject达到阻塞的目的
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
 	ZeroMemory(&si, sizeof(si));
@@ -288,15 +281,15 @@ int Scaner::findstr(MyFile* file)
 	}
 	while (!feof(fp))
 	{
-		char* buf = (char*)malloc(1024);
-		memset(buf, 0, 1024);
-		fgets(buf, 1024, fp);
+		char* buf = (char*)malloc(4096);
+		memset(buf, 0, 4096);
+		fgets(buf, 4096, fp);
 		if (strstr(buf, NAME1) != NULL)
 		{
 			strcpy(file->key, NAME1);
 			strcpy(file->comment, buf);
-			if (file->comment[1023] == '\0')
-				file->comment[1022] = '\n';
+			if (file->comment[4095] == '\0')
+				file->comment[4094] = '\n';
 
 			free(buf);
 			fclose(fp);
@@ -307,8 +300,8 @@ int Scaner::findstr(MyFile* file)
 		{
 			strcpy(file->key, NAME2);
 			strcpy(file->comment, buf);
-			if (file->comment[1023] == '\0')
-				file->comment[1022] = '\n';
+			if (file->comment[4095] == '\0')
+				file->comment[4094] = '\n';
 
 			free(buf);
 			fclose(fp);
@@ -319,8 +312,8 @@ int Scaner::findstr(MyFile* file)
 		{
 			strcpy(file->key, NAME3);
 			strcpy(file->comment, buf);
-			if (file->comment[1023] == '\0')
-				file->comment[1022] = '\n';
+			if (file->comment[4095] == '\0')
+				file->comment[4094] = '\n';
 
 			free(buf);
 			fclose(fp);
