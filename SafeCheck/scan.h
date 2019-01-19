@@ -27,6 +27,8 @@ struct MyFile
 	char path[3001];		//文件路径
 	char key[21];			//文件关键字
 	char comment[4096];		//文件关键字内容
+	int size;				//文件大小
+	int rank;				//关键字级别
 };
 class Scaner
 {

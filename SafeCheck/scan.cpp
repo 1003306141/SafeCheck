@@ -275,6 +275,11 @@ int Scaner::findstr(MyFile* file)
 		remove(destpath);
 		return FALSE;
 	}
+	//获取文件字节数
+	fseek(fp, 0, SEEK_END);
+	file->size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+
 	while (!feof(fp))
 	{
 		char* buf = (char*)malloc(4096);
@@ -284,7 +289,11 @@ int Scaner::findstr(MyFile* file)
 		{
 			if (strstr(buf, mykey.Key[i]) != NULL)
 			{
+				//关键字级别
+				file->rank = i;
+				//关键字
 				strcpy(file->key, mykey.Key[i]);
+				//关键字前后文
 				strcpy(file->comment, buf);
 				if (file->comment[4095] == '\0')
 					file->comment[4094] = '\n';
@@ -372,7 +381,7 @@ void Scaner::CreateLog(int type)
 	fp = fopen(time, "a+");
 	if (fp != NULL)
 		for (int i = 0; i < v.size(); i++)
-			fprintf(fp, "%s------%s------%s------%s", v[i].name, v[i].path, v[i].key, v[i].comment);
+			fprintf(fp, "%s------%d-%s-1-100:%d------%s", v[i].path,v[i].rank, v[i].key,v[i].size, v[i].comment);
 	fclose(fp);
 	
 	//清除元素并回收内存
@@ -390,9 +399,9 @@ void Scaner::GetKeyConfig()
 	if (fp == NULL)
 	{
 		mykey.count = 3;
-		mykey.Key[0] = "秘密";
+		mykey.Key[0] = "绝密";
 		mykey.Key[1] = "机密";
-		mykey.Key[2] = "绝密";
+		mykey.Key[2] = "秘密";
 
 		//不存在文件则默认生成一个关键字文件
 		FILE* fp2 = fopen("key.ini", "w");
