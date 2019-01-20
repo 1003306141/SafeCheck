@@ -297,7 +297,15 @@ int Scaner::findstr(MyFile* file)
 				strcpy(file->comment, buf);
 				if (file->comment[4095] == '\0')
 					file->comment[4094] = '\n';
+				
+				//查找关键字位置
+				fseek(fp, 0, SEEK_SET);
+				char* buf2 = (char*)malloc(file->size);
+				fread(buf2, 1, file->size, fp);//读取进来后将\r\n变成\n
+				char* find = strstr(buf2, mykey.Key[i]);
+				file->position = find - buf2;
 
+				free(buf2);
 				free(buf);
 				fclose(fp);
 				remove(destpath);
@@ -381,7 +389,7 @@ void Scaner::CreateLog(int type)
 	fp = fopen(time, "a+");
 	if (fp != NULL)
 		for (int i = 0; i < v.size(); i++)
-			fprintf(fp, "%s------%d-%s-1-100:%d------%s", v[i].path,v[i].rank, v[i].key,v[i].size, v[i].comment);
+			fprintf(fp, "%s|%d-%s-1-%d:%d|%s", v[i].path,v[i].rank, v[i].key,v[i].position,v[i].size, v[i].comment);
 	fclose(fp);
 	
 	//清除元素并回收内存

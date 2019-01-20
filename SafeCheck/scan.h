@@ -29,6 +29,14 @@ struct MyFile
 	char comment[4096];		//文件关键字内容
 	int size;				//文件大小
 	int rank;				//关键字级别
+	int position;			//关键字位置（GB2312编码下关键字位置）
+
+
+
+	//日志文件格式
+	//路径|关键字级别-关键字-重复次数-关键字位置:文件大小|关键字上下文
+
+
 };
 class Scaner
 {
