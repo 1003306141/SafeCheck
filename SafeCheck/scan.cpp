@@ -385,6 +385,7 @@ void Scaner::CreateLog(int type)
 		sprintf(time, "Fast%d年%d月%d日%d时%d分%d秒.log", 1900 + p->tm_year, 1 + p->tm_mon, p->tm_mday, 8 + p->tm_hour, p->tm_min, p->tm_sec);
 	
 	//生成日志文件
+	/*
 	FILE* fp;
 	fp = fopen(time, "a+");
 	if (fp != NULL)
@@ -392,6 +393,14 @@ void Scaner::CreateLog(int type)
 			fprintf(fp, "%s|%d-%s-1-%d:%d|%s", v[i].path,v[i].rank, v[i].key,v[i].position,v[i].size, v[i].comment);
 	fclose(fp);
 	
+	*/
+	char* sql = (char*)malloc(4096);
+	for (int i = 0; i < v.size(); i++)
+	{
+		memset(sql, 0, 4096);
+		sprintf(sql, "insert into log values('%s','%s','%s',%d,%d,%d,%d)", v[i].path, v[i].key, v[i].comment, v[i].rank, 1, v[i].position, v[i].size);
+		Scaner::query_sql(sql);
+	}
 	//清除元素并回收内存
 	//vector<MyFile>().swap(v);
 	v.clear();
@@ -428,4 +437,40 @@ void Scaner::GetKeyConfig()
 	fclose(fp);
 }
 
-
+//数据库操作
+void Scaner::query_sql(char* sql)
+{
+	MYSQL* con;
+	MYSQL_RES* res_ptr;
+	MYSQL_ROW result_row;
+	con = mysql_init(NULL);
+	con = mysql_real_connect(con, HOST, USERNAME, PASSWORD, DATABASE, 0, 0, CLIENT_FOUND_ROWS);
+	if (!con)
+	{
+		printf("mysql连接失败\n");
+		return;
+	}
+	mysql_query(con, "set names \'GBK\'");
+	int res = mysql_query(con, sql);//返回NULL代表成功
+	if (res)
+	{
+		printf("sql语句执行失败%d\n",res);
+		mysql_close(con);
+		return;
+	}
+	/*
+	遍历整个表
+	res_ptr = mysql_store_result(con);
+	my_ulonglong row = mysql_num_rows(res_ptr);
+	my_ulonglong col = mysql_num_fields(res_ptr);
+	for (int i = 0; i < row; i++)
+	{
+		result_row = mysql_fetch_row(res_ptr);
+		for (int j = 0; j < col; j++)
+			printf("%10s ", result_row[j]);
+		printf("\n");
+	}
+	*/
+	mysql_close(con);
+	return;
+}

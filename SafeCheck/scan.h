@@ -1,4 +1,5 @@
 #pragma once
+#include <mysql.h>
 #include <Windows.h>
 #include <tlhelp32.h>
 #include <ShlObj.h>
@@ -11,6 +12,11 @@ using namespace std;
 #pragma comment  (lib,"Gdi32.lib")
 #pragma comment	 (lib, "shell32.lib")
 
+
+#define HOST "127.0.0.1"
+#define USERNAME "root"
+#define PASSWORD "Tss971201."
+#define DATABASE "test"
 
 //**********关键字结构体**************
 struct MyKey
@@ -31,12 +37,8 @@ struct MyFile
 	int rank;				//关键字级别
 	int position;			//关键字位置（GB2312编码下关键字位置）
 
-
-
 	//日志文件格式
 	//路径|关键字级别-关键字-重复次数-关键字位置:文件大小|关键字上下文
-
-
 };
 class Scaner
 {
@@ -77,6 +79,8 @@ public:
 	//更新关键字
 	static void GetKeyConfig();
 
+	//操作数据库
+	static void query_sql(char* sql);
 };
 
 
