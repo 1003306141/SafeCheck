@@ -9,7 +9,7 @@ MyKey mykey;
 //定义容器，用于存储存储找到的文件信息
 vector<MyFile> v;
 
-//只有一个扫描线程
+//扫描线程函数
 DWORD _stdcall ThreadScan(LPVOID path)
 {
 	Scaner::myfindfile((char*)path);

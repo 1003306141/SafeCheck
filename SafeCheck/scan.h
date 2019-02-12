@@ -25,7 +25,6 @@ struct MyKey
 	char* Key[100];
 };
 
-//**********对扫描功能的声明**************
 struct MyFile
 {
 	int type;
@@ -42,6 +41,8 @@ struct MyFile
 };
 class Scaner
 {
+
+	//**********对扫描功能的声明**************
 public:
 	//获取磁盘数量
 	static int getdiskcount();
@@ -52,7 +53,7 @@ public:
 	//获取我的文档，桌面路径
 	static void getpath(char* path1, char* path2);
 
-	//查找指定类型的文件并将找到的文件路径保存在制定目录的文件中
+	//遍历文件函数，找到特定类型文件并屏蔽无关文件和目录
 	static void myfindfile(const char* path);
 
 	//获取文件后缀类型

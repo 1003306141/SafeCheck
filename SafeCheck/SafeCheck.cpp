@@ -1,4 +1,5 @@
 ﻿#include "scan.h"
+#include "monitor.h"
 
 //禁止多开
 int MoreOpen();
@@ -29,6 +30,10 @@ int main()
 				printf("\n现在开始全盘扫描......\n");
 				Scaner::alldiskscan();
 			}; break;
+			case '3':
+			{	
+				start();
+			}; break;
 			case '0':
 			{
 				return 0;
@@ -48,6 +53,7 @@ void mainface()
 	printf("--------------------------------\n");
 	printf("           1.快速扫描           \n");
 	printf("           2.全盘扫描           \n");
+	printf("           3.动态监控           \n");
 	printf("           0.退出程序           \n");
 	printf("--------------------------------\n");
 	printf("请输入您的操作: ");

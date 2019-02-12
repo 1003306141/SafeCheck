@@ -161,10 +161,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="monitor.cpp" />
     <ClCompile Include="SafeCheck.cpp" />
     <ClCompile Include="scan.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="monitor.h" />
     <ClInclude Include="scan.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
