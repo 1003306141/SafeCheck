@@ -1,7 +1,7 @@
 #include "monitor.h"
 
 
-char* getsyspath()
+char* Monitor::getpath()
 {
 	char buffer[1024];
 	memset(buffer, 0, 1024);
@@ -10,15 +10,19 @@ char* getsyspath()
 	return buffer;
 }
 
-void start()
+void Monitor::start()
 {
 	char buffer[1024];
 	memset(buffer, 0, 1024);
-	strcpy(buffer, getsyspath());
-	myfindfile(buffer);
+	strcpy(buffer, getpath());
+	while (1)
+	{
+		myfindfile(buffer);
+		Sleep(1000);
+	}
 }
 
-void myfindfile(const char* path)
+void Monitor::myfindfile(const char* path)
 {
 	char* currentpath = (char*)malloc(3000);
 
@@ -43,7 +47,16 @@ void myfindfile(const char* path)
 			int ret = getfiletype(findFileData.cFileName);
 			if (ret == 1 || ret == 2 || ret == 3 || ret == 4 || ret == 5 || ret == 6 || ret == 7 || ret == 8)
 			{
-				printf("%s\n", findFileData.cFileName);
+				FILETIME ft = { 0 };
+				SYSTEMTIME st1 = { 0 };
+				FileTimeToLocalFileTime(&findFileData.ftLastWriteTime, &ft);
+				FileTimeToSystemTime(&ft, &st1);
+
+				if (compare(st1) == 0)
+				{
+					printf("%s---------%4d-%02d-%02d %02d:%02d:%02d\n", findFileData.cFileName, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+					updatetime();
+				}
 			}
 		}
 		if (FindNextFile(hFind, &findFileData) == FALSE)
@@ -56,7 +69,51 @@ void myfindfile(const char* path)
 	free(currentpath);
 }
 
-int getfiletype(char filename[MAX_PATH])
+int Monitor::compare(SYSTEMTIME st1)
+{
+	///数值越大代表时间越新
+
+	//比较年
+	if (st1.wYear < st.wYear)
+		return -1;
+	if (st1.wYear > st.wYear)
+		return 0;
+
+	//比较月
+	if (st1.wMonth < st.wMonth)
+		return -1;
+	if (st1.wMonth > st.wMonth)
+		return 0;
+
+	//比较日
+	if (st1.wDay < st.wDay)
+		return -1;
+	if (st1.wDay > st.wDay)
+		return 0;
+
+	//比较时
+	if (st1.wHour < st.wHour)
+		return -1;
+	if (st1.wHour > st.wHour)
+		return 0;
+
+	//比较分
+	if (st1.wMinute < st.wMinute)
+		return -1;
+	if (st1.wMinute > st.wMinute)
+		return 0;
+
+	//比较秒
+	if (st1.wSecond < st.wSecond)
+		return -1;
+	if (st1.wSecond > st.wSecond)
+		return 0;
+	
+	//时间相同
+	return 0;
+}
+
+int Monitor::getfiletype(char filename[MAX_PATH])
 {
 	//返回值DOC=1、DOCX=2、XLS=3、XLSX=4、PDF=5、WPS=6、PPT=7、PPTX=8
 	//快捷方式后缀都为.lnk，所以这里得再多减4
