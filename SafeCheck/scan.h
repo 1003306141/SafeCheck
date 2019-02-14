@@ -18,6 +18,9 @@ using namespace std;
 #define PASSWORD "Tss971201."
 #define DATABASE "test"
 
+#define TwoAll2txt 1
+#define OneAll2txt 0
+
 //**********关键字结构体**************
 struct MyKey
 {
@@ -59,8 +62,11 @@ public:
 	//获取文件后缀类型
 	static int getfiletype(char filename[MAX_PATH]);
 
-	//全盘查找
+	//全盘快速
 	static void alldiskscan();
+
+	//全盘普通
+	static void alldiskscannormal();
 
 	//转换特定格式文件到txt
 	static void all2txt(MyFile* file);

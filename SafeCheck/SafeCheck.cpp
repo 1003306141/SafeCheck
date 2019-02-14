@@ -32,7 +32,8 @@ int main()
 			}; break;
 			case '3':
 			{	
-				start();
+				printf("\n现在开始全盘普通扫描......\n");
+				Scaner::alldiskscannormal();
 			}; break;
 			case '0':
 			{
@@ -52,8 +53,9 @@ void mainface()
 {
 	printf("--------------------------------\n");
 	printf("           1.快速扫描           \n");
-	printf("           2.全盘扫描           \n");
-	printf("           3.动态监控           \n");
+	printf("           2.全盘快速           \n");
+	printf("           3.全盘普通           \n");
+	printf("           4.测试功能           \n");
 	printf("           0.退出程序           \n");
 	printf("--------------------------------\n");
 	printf("请输入您的操作: ");
