@@ -1,5 +1,4 @@
 #pragma once
-#include <mysql.h>
 #include <Windows.h>
 #include <tlhelp32.h>
 #include <ShlObj.h>
@@ -28,6 +27,7 @@ struct MyKey
 	char* Key[100];
 };
 
+//**********文件信息结构体**************
 struct MyFile
 {
 	int type;

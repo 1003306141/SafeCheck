@@ -1,5 +1,5 @@
 ﻿#include "scan.h"
-#include "monitor.h"
+//#include "monitor.h"
 
 //禁止多开
 int MoreOpen();
@@ -38,8 +38,8 @@ int main()
 			case '4':
 			{
 				printf("\n开始动态监控......\n");
-				Monitor m;
-				m.start();
+				//Monitor m;
+				//m.start();
 			}break;
 			case '0':
 			{

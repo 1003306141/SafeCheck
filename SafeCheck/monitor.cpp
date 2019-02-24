@@ -18,7 +18,7 @@ void Monitor::start()
 	while (1)
 	{
 		myfindfile(buffer);
-		Sleep(1000);
+		Sleep(3000);
 	}
 }
 

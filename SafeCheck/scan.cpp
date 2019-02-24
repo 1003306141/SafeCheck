@@ -467,6 +467,8 @@ void Scaner::GetKeyConfig()
 }
 
 //数据库操作
+
+/*
 void Scaner::query_sql(char* sql)
 {
 	MYSQL* con;
@@ -487,7 +489,7 @@ void Scaner::query_sql(char* sql)
 		mysql_close(con);
 		return;
 	}
-	/*
+	
 	遍历整个表
 	res_ptr = mysql_store_result(con);
 	my_ulonglong row = mysql_num_rows(res_ptr);
@@ -499,7 +501,8 @@ void Scaner::query_sql(char* sql)
 			printf("%10s ", result_row[j]);
 		printf("\n");
 	}
-	*/
+	
 	mysql_close(con);
 	return;
 }
+*/
