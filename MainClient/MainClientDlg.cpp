@@ -30,6 +30,10 @@ void CMainClientDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CMainClientDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_BN_CLICKED(IDOK, &CMainClientDlg::OnBnClickedOk)
+	ON_BN_CLICKED(IDCANCEL, &CMainClientDlg::OnBnClickedCancel)
+	ON_BN_CLICKED(IDC_REGISTER, &CMainClientDlg::OnBnClickedRegister)
+	ON_BN_CLICKED(IDC_EXIT, &CMainClientDlg::OnBnClickedExit)
 END_MESSAGE_MAP()
 
 
@@ -85,3 +89,30 @@ HCURSOR CMainClientDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+
+
+void CMainClientDlg::OnBnClickedOk()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	//CDialogEx::OnOK();
+}
+
+
+void CMainClientDlg::OnBnClickedCancel()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	//CDialogEx::OnCancel();
+}
+
+
+void CMainClientDlg::OnBnClickedRegister()
+{
+	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+void CMainClientDlg::OnBnClickedExit()
+{
+	OnCancel();
+	// TODO: 在此添加控件通知处理程序代码
+}
