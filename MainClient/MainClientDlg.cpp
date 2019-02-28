@@ -6,6 +6,7 @@
 #include "MainClient.h"
 #include "MainClientDlg.h"
 #include "afxdialogex.h"
+#include "Network.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -49,6 +50,7 @@ BOOL CMainClientDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	GetDlgItem(IDC_IPADDRESS1)->SetWindowTextA("114.115.244.171");
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -91,28 +93,75 @@ HCURSOR CMainClientDlg::OnQueryDragIcon()
 
 
 
+
+
+
 void CMainClientDlg::OnBnClickedOk()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	//CDialogEx::OnOK();
 }
 
-
 void CMainClientDlg::OnBnClickedCancel()
 {
-	// TODO: 在此添加控件通知处理程序代码
 	//CDialogEx::OnCancel();
 }
 
-
 void CMainClientDlg::OnBnClickedRegister()
 {
-	// TODO: 在此添加控件通知处理程序代码
+	if (!CheckInput())
+		return;
+	if (!CheckUser())
+		return;
 }
-
-
 void CMainClientDlg::OnBnClickedExit()
 {
 	OnCancel();
-	// TODO: 在此添加控件通知处理程序代码
+}
+
+bool CMainClientDlg::CheckInput()
+{
+	CString str;
+	GetDlgItem(IDC_IPADDRESS1)->GetWindowTextA(str);
+	if (str == "0.0.0.0")
+	{
+		MessageBox("IP地址不能为空！", 0, 0);
+		return FALSE;
+	}
+	GetDlgItem(IDC_USERNAME)->GetWindowTextA(str);
+	if (str == "")
+	{
+		MessageBox("用户名不能为空！", 0, 0);
+		return FALSE;
+	}
+	GetDlgItem(IDC_PASSWORD)->GetWindowTextA(str);
+	if (str == "")
+	{
+		MessageBox("密码不能为空！", 0, 0);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+bool CMainClientDlg::CheckUser()
+{
+	CString str;
+	char ServerIP[20], username[20], password[20];
+
+	GetDlgItem(IDC_IPADDRESS1)->GetWindowTextA(str);
+	strcpy(ServerIP, str);
+
+	GetDlgItem(IDC_USERNAME)->GetWindowTextA(str);
+	strcpy(username, str);
+
+	GetDlgItem(IDC_PASSWORD)->GetWindowTextA(str);
+	strcpy(password, str);
+
+	if (Authentication(ServerIP, username, password))
+	{
+		MessageBox("注册成功", 0, 0);
+		return TRUE;
+	}
+
+	return FALSE;
 }

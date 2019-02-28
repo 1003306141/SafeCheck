@@ -7,8 +7,8 @@
 #define IDC_REGISTER                    1000
 #define IDC_EXIT                        1001
 #define IDC_IPADDRESS1                  1002
+#define IDC_IPADDRESS                   1002
 #define IDC_USERNAME                    1003
-#define IDC_USERNAME2                   1004
 #define IDC_PASSWORD                    1004
 
 // Next default values for new objects

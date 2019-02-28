@@ -101,7 +101,7 @@ int InitSSL(const char *ip, int port)
 		ret = connect(hdl.sock, (SOCKADDR*)&addrSrv, sizeof(SOCKADDR));
 		if (ret < 0)
 		{
-			ERR_print_errors_fp(stdout);
+			//ERR_print_errors_fp(stdout);
 			printf("connect error : %d\n", WSAGetLastError());
 			return -1;
 		}
@@ -187,11 +187,15 @@ bool GetReplyInfo(char* info)
 	return TRUE;
 }
 
-bool Authentication(const char* ServerIP, const char* username)
+bool Authentication(char* ServerIP, char* username, char* password)
 {
 	char info[30];
 
-	InitSSL(ServerIP, 50005);
+	if (InitSSL(ServerIP, 50005) == -1)
+	{
+		MessageBox(0, "连接失败！", 0, 0);
+		return FALSE;
+	}
 	GetReplyInfo(info);
 	if (strcmp(info, "WHO ARE YOU") != 0)
 		return FALSE;
@@ -200,10 +204,17 @@ bool Authentication(const char* ServerIP, const char* username)
 	char wiredMAC[20], wiredIP[20], ATHinfo[50];
 	if (!GetWiredMAC_IP(wiredMAC, wiredIP))
 		return FALSE;
-	sprintf(ATHinfo, "%s\n1234567\n%s\n%s", username, wiredMAC, wiredIP);
+	sprintf(ATHinfo, "%s\n%s\n%s\n%s", username, password, wiredMAC, wiredIP);
 	SendInfo("ATH", ATHinfo);
 
 	GetReplyInfo(info);
+
+	//检查当前账号是否存在
+	if (strcmp(info, "INVALID CLIENT") == 0)
+	{
+		MessageBox(0, "INVALID CLIENT", 0, 0);
+		return FALSE;
+	}
 	//检查当前账号是否在线
 	if (strcmp(info, "ALREADY LOGIN") == 0)
 	{

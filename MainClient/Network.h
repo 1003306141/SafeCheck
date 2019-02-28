@@ -58,7 +58,7 @@ bool SendInfo(const char* cmdType, const char* text);
 bool GetReplyInfo(char* info);
 
 //用户认证
-bool Authentication(const char* ServerIP, const char* username);
+bool Authentication(char* ServerIP, char* username, char* password);
 
 //客户端注册
 bool RegisterClient();

@@ -35,4 +35,8 @@ public:
 	afx_msg void OnBnClickedCancel();
 	afx_msg void OnBnClickedRegister();
 	afx_msg void OnBnClickedExit();
+
+public:
+	bool CheckInput();
+	bool CheckUser();
 };
