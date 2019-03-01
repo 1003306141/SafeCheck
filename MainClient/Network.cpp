@@ -284,7 +284,7 @@ bool GetFromServer(char* username)
 {
 	static	FD_SET fdRead;
 
-	static TIMEVAL	tv = { 0, 500 };//设置超时等待时间
+	static TIMEVAL	tv = { 0, 2000 };//设置超时等待时间
 
 	FD_ZERO(&fdRead);
 	FD_SET(hdl.sock, &fdRead);
@@ -305,6 +305,7 @@ bool GetFromServer(char* username)
 		//全盘扫描
 		if (strcmp(info, "003#") == 0)
 		{
+			SendInfo("COK", "executing task");
 			char filename[40] = { 0 };
 			sprintf(filename, "first-%s.rlog", username);
 			RemoteAllScan(filename);
@@ -312,6 +313,7 @@ bool GetFromServer(char* username)
 		//快速扫描
 		if (strcmp(info, "006#") == 0)
 		{
+			SendInfo("COK", "executing task");
 			char filename[40] = { 0 };
 			sprintf(filename, "second-%s.rlog", username);
 			RemoteFastScan(filename);
@@ -439,7 +441,7 @@ bool RemoteAllScan(char* filename)
 
 	//上传文件
 	SOCKET sock;
-	if (areYouReady(sock, 1))
+	if (areYouReady(sock, 1))      
 	{
 		UploadFile(sock, filename);
 		remove(filename);

@@ -109,9 +109,7 @@ void CMainClientDlg::OnBnClickedRegister()
 		return;
 	if (!CheckUser())
 		return;
-	ShowWindow(SW_HIDE);
-
-
+	//ShowWindow(SW_HIDE);
 
 	char* username = (char*)malloc(40);
 	memset(username, 0, 40);
@@ -119,7 +117,6 @@ void CMainClientDlg::OnBnClickedRegister()
 	GetDlgItem(IDC_USERNAME)->GetWindowTextA(str);
 	strcpy(username, str);
 	CreateThread(NULL, 0, GerServerCommand, (LPVOID)username, 0, NULL);
-
 }
 void CMainClientDlg::OnBnClickedExit()
 {
@@ -172,3 +169,5 @@ bool CMainClientDlg::CheckUser()
 
 	return FALSE;
 }
+
+
