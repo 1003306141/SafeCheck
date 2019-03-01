@@ -4,6 +4,8 @@
 
 static SSL_Handler hdl = { 0 };
 
+char serverIP[40] = { 0 };
+char username[40] = { 0 };
 
 bool GetWiredMAC_IP(char* wiredMAC, char* wiredIP)
 {
@@ -188,6 +190,51 @@ bool GetReplyInfo(char* info)
 	return TRUE;
 }
 
+bool AutoAuthentication()
+{
+	char info[30];
+
+	if (InitSSL(serverIP, 50005) == -1)
+		MessageBox(0, "连接失败！", "失败", 0);
+
+	GetReplyInfo(info);
+	if (strcmp(info, "WHO ARE YOU") != 0)
+		return FALSE;
+
+	//构造指定格式的认证信息
+	char wiredMAC[20], wiredIP[20], ATHinfo[50];
+	if (!GetWiredMAC_IP(wiredMAC, wiredIP))
+		return FALSE;
+	sprintf(ATHinfo, "%s\n%s\n%s\n%s", username, "1234567", wiredMAC, wiredIP);
+	SendInfo("ATH", ATHinfo);
+
+	GetReplyInfo(info);
+
+	//检查当前账号是否存在
+	if (strcmp(info, "INVALID CLIENT") == 0)
+		return FALSE;
+
+	//检查当前账号是否在线
+	if (strcmp(info, "ALREADY LOGIN") == 0)
+		return FALSE;
+
+	//检查密码
+	if (strcmp(info, "WRONG PASSWD") == 0)
+		return FALSE;
+
+	//检查 mac 是否与注册时的一致
+	if (strcmp(info, "NO_LOGIN") == 0)
+		return FALSE;
+
+	//检查 mac 是否与注册时的一致
+	if (strcmp(info, "MAC_DIFF") == 0)
+		return FALSE;
+
+	//---------这句其实已经没什么吊用---------114.215.19.63 50007 3
+	GetReplyInfo(info);
+	return TRUE;
+}
+
 bool Authentication(char* ServerIP, char* username, char* password)
 {
 	char info[30];
@@ -281,7 +328,7 @@ bool RegisterClient()
 	*/
 }
 
-bool GetFromServer(char* username)
+bool GetFromServer()
 {
 	static	FD_SET fdRead;
 
@@ -360,7 +407,7 @@ bool initSock(SOCKET &sclient, const char* host, int port)
 
 bool areYouReady(SOCKET& sock, int seq)
 {
-	static char *host = "114.115.244.171";
+	static char *host = serverIP;
 	static int port = 50007;
 	static char buf[8];
 	int waitingTasks = 5;
@@ -488,31 +535,48 @@ bool CheckInternet()
 		return FALSE;
 }
 
-DWORD _stdcall GetServerCommand(LPVOID a)
+bool GetConfig()
 {
-	//循环从服务器获取命令
+	FILE* fp = fopen("config.ini", "r");
+	if (fp == NULL)
+		return FALSE;
+	fscanf(fp, "%s%s%s", serverIP, username);
+	fclose(fp);
+}
+
+DWORD _stdcall GetServerCommand(LPVOID Dlg)
+{
+	GetConfig();
+
+	Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+	((CMainClientDlg*)Dlg)->InitTray(1);
 	int isTray = 1;
-	while (1000)
+
+	//循环从服务器获取命令
+	while (1)
 	{
 		if (CheckInternet())
 		{
 			if (isTray == 0)
 			{
-				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)((A*)a)->a)->m_nid);
-				((CMainClientDlg*)((A*)a)->a)->InitTray(1);
+				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+				((CMainClientDlg*)Dlg)->InitTray(1);
 				isTray = 1;
 			}
-			GetFromServer(((A*)a)->username);
+			GetFromServer();
 		}
 		else
 		{
 			if (isTray == 1)
 			{
-				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)((A*)a)->a)->m_nid);
-				((CMainClientDlg*)((A*)a)->a)->InitTray(0);
+				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+				((CMainClientDlg*)Dlg)->InitTray(0);
 				isTray = 0;
 			}
+			if (!AutoAuthentication())
+				Sleep(5000);
 		}
+		Sleep(1000);
 	}
 }
 

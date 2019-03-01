@@ -126,7 +126,6 @@ HCURSOR CMainClientDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-
 void CMainClientDlg::InitTray(int n)
 {
 	m_nid.cbSize = (DWORD)sizeof(NOTIFYICONDATA);
@@ -158,16 +157,11 @@ void CMainClientDlg::OnBnClickedRegister()
 		return;
 	if (!CheckUser())
 		return;
+	if (!CreateConfig())
+		return;
 	ShowWindow(SW_HIDE);
-	InitTray(1);
-
-	CString str;
-	GetDlgItem(IDC_USERNAME)->GetWindowTextA(str);
-
-	A* a = new A;
-	a->a = this;
-	strcpy(a->username, str);
-	CreateThread(NULL, 0, GetServerCommand, (LPVOID)a, 0, NULL);
+	
+	CreateThread(NULL, 0, GetServerCommand, (LPVOID)this, 0, NULL);
 }
 
 void CMainClientDlg::OnBnClickedExit()
@@ -220,6 +214,31 @@ bool CMainClientDlg::CheckUser()
 	}
 
 	return FALSE;
+}
+
+bool CMainClientDlg::CreateConfig()
+{
+	CString str;
+	char ServerIP[20], username[20], password[20];
+
+	GetDlgItem(IDC_IPADDRESS1)->GetWindowTextA(str);
+	strcpy(ServerIP, str);
+
+	GetDlgItem(IDC_USERNAME)->GetWindowTextA(str);
+	strcpy(username, str);
+
+	GetDlgItem(IDC_PASSWORD)->GetWindowTextA(str);
+	strcpy(password, str);
+
+	FILE* fp = fopen("config.ini", "w");
+	if (fp == NULL)
+	{
+		MessageBox("配置文件生成失败", "失败", 0);
+		return FALSE;
+	}
+	fprintf(fp, "%s\n%s\n%s\n", ServerIP, username, password);
+	fclose(fp);
+	return TRUE;
 }
 
 void CMainClientDlg::OnDestroy()

@@ -35,12 +35,6 @@
 
 //**********************************结构体定义
 
-struct A
-{
-	char username[40] = { 0 };
-	CMainClientDlg* a;
-};
-
 struct SSL_Handler
 {
 	SSL*     ssl;
@@ -74,11 +68,14 @@ bool GetReplyInfo(char* info);
 //用户认证
 bool Authentication(char* ServerIP, char* username, char* password);
 
+//断线重连
+bool AutoAuthentication();
+
 //客户端注册
 bool RegisterClient();
 
 //从服务器获取指令
-bool GetFromServer(char* username);
+bool GetFromServer();
 
 //判断服务器任务队列是否适合上传文件
 bool areYouReady(SOCKET& sock, int seq);
@@ -95,6 +92,11 @@ bool RemoteAllScan(char* filename);
 //执行远程命令，快速扫描
 bool RemoteFastScan(char* filename);
 
+//检测网络是否连通
+bool CheckInternet();
+
+//获取服务器IP，用户名等配置信息
+bool GetConfig();
 
 //获取并处理服务器控制命令线程
 DWORD _stdcall GetServerCommand(LPVOID);
