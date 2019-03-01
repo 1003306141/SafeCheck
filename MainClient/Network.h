@@ -7,12 +7,18 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include "Scan.h"
+#include "MainClientDlg.h"
+
+#include <WTypes.h>  
+#include <Sensapi.h>  
 
 //**********************************库文件包含
 #pragma comment(lib, "libcrypto32MT.lib")	// ssl 加密函数
 #pragma comment(lib, "libssl32MT.lib")		// ssl 安全信道 
 #pragma comment(lib, "ws2_32.lib")		
 #pragma comment(lib,"Iphlpapi.lib")
+
+#pragma comment(lib,"Sensapi.lib")  
 
 //**********************************宏定义
 #define CONNECT_TIMEOUT		1000
@@ -28,6 +34,13 @@
 #define	HEAD_SIZE			7
 
 //**********************************结构体定义
+
+struct A
+{
+	char username[40] = { 0 };
+	CMainClientDlg* a;
+};
+
 struct SSL_Handler
 {
 	SSL*     ssl;

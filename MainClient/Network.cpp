@@ -4,6 +4,7 @@
 
 static SSL_Handler hdl = { 0 };
 
+
 bool GetWiredMAC_IP(char* wiredMAC, char* wiredIP)
 {
 	//申请10个网卡空间
@@ -324,8 +325,7 @@ bool GetFromServer(char* username)
 			MessageBox(0, "远程卸载", 0, 0);
 		}
 	}
-
-	return false;
+	return FALSE;
 }
 
 bool initSock(SOCKET &sclient, const char* host, int port)
@@ -478,13 +478,41 @@ bool RemoteFastScan(char* filename)
 	}
 }
 
-DWORD _stdcall GetServerCommand(LPVOID username)
+bool CheckInternet()
+{
+	DWORD flag;
+	IsNetworkAlive(&flag);
+	if (flag == 3)
+		return TRUE;
+	else if (flag == 1)
+		return FALSE;
+}
+
+DWORD _stdcall GetServerCommand(LPVOID a)
 {
 	//循环从服务器获取命令
-	while (1)
+	int isTray = 1;
+	while (1000)
 	{
-		GetFromServer((char*)username);
-		Sleep(1000);
+		if (CheckInternet())
+		{
+			if (isTray == 0)
+			{
+				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)((A*)a)->a)->m_nid);
+				((CMainClientDlg*)((A*)a)->a)->InitTray(1);
+				isTray = 1;
+			}
+			GetFromServer(((A*)a)->username);
+		}
+		else
+		{
+			if (isTray == 1)
+			{
+				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)((A*)a)->a)->m_nid);
+				((CMainClientDlg*)((A*)a)->a)->InitTray(0);
+				isTray = 0;
+			}
+		}
 	}
 }
 

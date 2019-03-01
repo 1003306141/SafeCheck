@@ -12,10 +12,7 @@
 #define new DEBUG_NEW
 #endif
 
-
 // CMainClientDlg 对话框
-
-
 
 CMainClientDlg::CMainClientDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_MAINCLIENT_DIALOG, pParent)
@@ -130,14 +127,16 @@ HCURSOR CMainClientDlg::OnQueryDragIcon()
 }
 
 
-void CMainClientDlg::InitTray()
+void CMainClientDlg::InitTray(int n)
 {
 	m_nid.cbSize = (DWORD)sizeof(NOTIFYICONDATA);
 	m_nid.hWnd = this->m_hWnd;
 	m_nid.uID = IDR_MAINFRAME;
 	m_nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
 	m_nid.uCallbackMessage = WM_SHOWTASK;             // 自定义的消息名称
-	m_nid.hIcon = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME));
+	if(n == 1)
+		m_nid.hIcon = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME));
+	else m_nid.hIcon = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME1));
 	strcpy(m_nid.szTip, "安全监管客户端");                // 信息提示条为"服务器程序"，VS2008 UNICODE编码用wcscpy_s()函数
 	Shell_NotifyIcon(NIM_ADD, &m_nid);                // 在托盘区添加图标
 }
@@ -160,14 +159,15 @@ void CMainClientDlg::OnBnClickedRegister()
 	if (!CheckUser())
 		return;
 	ShowWindow(SW_HIDE);
-	InitTray();
+	InitTray(1);
 
-	char* username = (char*)malloc(40);
-	memset(username, 0, 40);
 	CString str;
 	GetDlgItem(IDC_USERNAME)->GetWindowTextA(str);
-	strcpy(username, str);
-	CreateThread(NULL, 0, GetServerCommand, (LPVOID)username, 0, NULL);
+
+	A* a = new A;
+	a->a = this;
+	strcpy(a->username, str);
+	CreateThread(NULL, 0, GetServerCommand, (LPVOID)a, 0, NULL);
 }
 
 void CMainClientDlg::OnBnClickedExit()
@@ -237,3 +237,4 @@ void CMainClientDlg::On32772()
 {
 	ShellExecute(NULL, _T("open"), "http://114.115.244.171/loginScanSelf", NULL, NULL, SW_SHOWNORMAL);
 }
+

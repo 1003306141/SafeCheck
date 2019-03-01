@@ -42,7 +42,7 @@ public:
 	LRESULT OnShowTask(WPARAM wParam, LPARAM lParam);
 	bool CheckInput();
 	bool CheckUser();
-	void InitTray();
+	void InitTray(int n);
 	afx_msg void OnDestroy();
 	//管理员登录
 	afx_msg void On32771();
