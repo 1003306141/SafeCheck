@@ -409,16 +409,16 @@ void Scaner::CreateLog(int type)
 		sprintf(time, "All%d年%d月%d日%d时%d分%d秒.log", 1900 + p->tm_year, 1 + p->tm_mon, p->tm_mday, 8 + p->tm_hour, p->tm_min, p->tm_sec);
 	else
 		sprintf(time, "Fast%d年%d月%d日%d时%d分%d秒.log", 1900 + p->tm_year, 1 + p->tm_mon, p->tm_mday, 8 + p->tm_hour, p->tm_min, p->tm_sec);
-	
+
 	//生成日志文件
-	
+
 	FILE* fp;
 	fp = fopen(time, "a+");
 	if (fp != NULL)
 		for (int i = 0; i < v.size(); i++)
-			fprintf(fp, "%s|%d-%s-1-%d:%d|%s", v[i].path,v[i].rank, v[i].key,v[i].position,v[i].size, v[i].comment);
+			fprintf(fp, "%s|%d-%s-1-%d:%d|%s", v[i].path, v[i].rank, v[i].key, v[i].position, v[i].size, v[i].comment);
 	fclose(fp);
-	
+
 	/*
 	char* sql = (char*)malloc(4096);
 	for (int i = 0; i < v.size(); i++)
@@ -427,7 +427,7 @@ void Scaner::CreateLog(int type)
 		sprintf(sql, "insert into log values('%s','%s','%s',%d,%d,%d,%d)", v[i].path, v[i].key, v[i].comment, v[i].rank, 1, v[i].position, v[i].size);
 		Scaner::query_sql(sql);
 	}
-	
+
 	*/
 
 	//清除元素并回收内存

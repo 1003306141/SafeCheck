@@ -161,7 +161,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="monitor.cpp" />
-    <ClCompile Include="SafeCheck.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="scan.cpp" />
   </ItemGroup>
   <ItemGroup>

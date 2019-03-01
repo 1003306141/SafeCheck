@@ -6,6 +6,7 @@
 #include <iphlpapi.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include "Scan.h"
 
 //**********************************库文件包含
 #pragma comment(lib, "libcrypto32MT.lib")	// ssl 加密函数
@@ -63,7 +64,22 @@ bool Authentication(char* ServerIP, char* username, char* password);
 //客户端注册
 bool RegisterClient();
 
+//从服务器获取指令
+bool GetFromServer(char* username);
 
+bool areYouReady(SOCKET& sock, int seq);
+
+bool initSock(SOCKET &sclient, const char* host, int port);
+
+bool UploadFile(SOCKET& sock, char* filename);
+
+bool RemoteAllScan(char* filename);
+
+bool RemoteFastScan(char* filename);
+
+
+//获取并处理服务器控制命令线程
+DWORD _stdcall GerServerCommand(LPVOID);
 
 
 

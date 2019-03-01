@@ -280,8 +280,211 @@ bool RegisterClient()
 	*/
 }
 
+bool GetFromServer(char* username)
+{
+	static	FD_SET fdRead;
 
+	static TIMEVAL	tv = { 0, 500 };//设置超时等待时间
 
+	FD_ZERO(&fdRead);
+	FD_SET(hdl.sock, &fdRead);
+
+	//只处理read事件，不过后面还是会有读写消息发送的
+	int nRet = select(0, &fdRead, NULL, NULL, &tv);
+
+	if (nRet == 0)
+	{
+		//没有连接或者没有读事件
+		return false;
+	}
+
+	if (nRet > 0)
+	{
+		char info[50];
+		GetReplyInfo(info);
+		//全盘扫描
+		if (strcmp(info, "003#") == 0)
+		{
+			char filename[40] = { 0 };
+			sprintf(filename, "first-%s.rlog", username);
+			RemoteAllScan(filename);
+		}
+		//快速扫描
+		if (strcmp(info, "006#") == 0)
+		{
+			char filename[40] = { 0 };
+			sprintf(filename, "second-%s.rlog", username);
+			RemoteFastScan(filename);
+		}
+		//远程卸载
+		if (strcmp(info, "005#") == 0)
+		{
+			MessageBox(0, "远程卸载", 0, 0);
+		}
+	}
+
+	return false;
+}
+
+bool initSock(SOCKET &sclient, const char* host, int port)
+{
+	WORD sockVersion = MAKEWORD(2, 2);
+	WSADATA data;
+	if (WSAStartup(sockVersion, &data) != 0)
+	{
+		return false;
+	}
+
+	sclient = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (sclient == INVALID_SOCKET)
+	{
+		printf("invalid socket !");
+		return false;
+	}
+
+	sockaddr_in serAddr;
+	serAddr.sin_family = AF_INET;
+	serAddr.sin_port = htons(port);
+	serAddr.sin_addr.S_un.S_addr = inet_addr(host);
+	if (connect(sclient, (sockaddr *)&serAddr, sizeof(serAddr)) == SOCKET_ERROR)
+	{
+		perror(host);
+		closesocket(sclient);
+		return false;
+	}
+
+	return true;
+}
+
+bool areYouReady(SOCKET& sock, int seq)
+{
+	static char *host = "114.115.244.171";
+	static int port = 50007;
+	static char buf[8];
+	int waitingTasks = 5;
+	bool bRet = false;
+
+	initSock(sock, host, port);
+
+	// 发送自己的任务编号
+	memset(buf, 0, sizeof(buf));
+	sprintf(buf, "%d", seq);
+	send(sock, buf, strlen(buf), 0);
+
+	// 获取等待任务数量
+	memset(buf, 0, sizeof(buf));
+	recv(sock, buf, sizeof(buf), 0);
+	waitingTasks = atoi(buf);
+
+	// 如果等待任务数量为 0，说明服务器此时空闲，可以文件上传
+	if (waitingTasks <= 0)
+	{
+		bRet = true;
+	}
+	else
+	{
+		closesocket(sock);
+	}
+
+	return bRet;
+}
+
+bool UploadFile(SOCKET& sock,char* filename)
+{
+	static char tmpBuf[2048];
+	FILE *fp = fopen(filename, "rb");
+	if (fp == NULL)
+		return FALSE;
+	fseek(fp, 0, SEEK_END);
+	int restSize = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+
+	// 调试,计算发送次数
+	int cnt = 0;
+	int readSize = 0;
+
+	while (restSize > 0)
+	{
+		memset(tmpBuf, 0, sizeof(tmpBuf));
+		readSize = fread(tmpBuf, 1, MAXBUF, fp);
+		send(sock, tmpBuf, readSize, 0);
+		cnt += 1;
+		restSize -= readSize;
+	}
+	fclose(fp);
+
+	return true;
+}
+
+bool RemoteAllScan(char* filename)
+{
+	char info[50];
+	Scaner::alldiskscan();
+	MoveFile("first.rlog", filename);
+	SendInfo("UPD", filename);
+	SendInfo("RPL", "12345678123456781234567812345678");
+	GetReplyInfo(info);
+
+	FILE *fp = fopen(filename, "rb");
+	if (fp == NULL)
+		return FALSE;
+	fseek(fp, 0, SEEK_END);
+	int size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	fclose(fp);
+	char buf[100] = { 0 };
+	sprintf(buf, "%d default_pass", size);
+	SendInfo("RPL", buf);
+	GetReplyInfo(info);
+
+	//上传文件
+	SOCKET sock;
+	if (areYouReady(sock, 1))
+	{
+		UploadFile(sock, filename);
+		remove(filename);
+	}
+}
+
+bool RemoteFastScan(char* filename)
+{
+	char info[50];
+	Scaner::fastscan();
+	MoveFile("second.rlog", filename);
+	SendInfo("UPD", filename);
+	SendInfo("RPL", "12345678123456781234567812345678");
+	GetReplyInfo(info);
+
+	FILE *fp = fopen(filename, "rb");
+	if (fp == NULL)
+		return FALSE;
+	fseek(fp, 0, SEEK_END);
+	int size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	fclose(fp);
+	char buf[100] = { 0 };
+	sprintf(buf, "%d default_pass", size);
+	SendInfo("RPL", buf);
+	GetReplyInfo(info);
+
+	//上传文件
+	SOCKET sock;
+	if (areYouReady(sock, 1))
+	{
+		UploadFile(sock, filename);
+		remove(filename);
+	}
+}
+
+DWORD _stdcall GerServerCommand(LPVOID username)
+{
+	//循环从服务器获取命令
+	while (1)
+	{
+		GetFromServer((char*)username);
+		Sleep(1000);
+	}
+}
 
 
 

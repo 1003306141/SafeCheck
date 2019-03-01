@@ -92,10 +92,6 @@ HCURSOR CMainClientDlg::OnQueryDragIcon()
 }
 
 
-
-
-
-
 void CMainClientDlg::OnBnClickedOk()
 {
 	// TODO: 在此添加控件通知处理程序代码
@@ -113,6 +109,17 @@ void CMainClientDlg::OnBnClickedRegister()
 		return;
 	if (!CheckUser())
 		return;
+	ShowWindow(SW_HIDE);
+
+
+
+	char* username = (char*)malloc(40);
+	memset(username, 0, 40);
+	CString str;
+	GetDlgItem(IDC_USERNAME)->GetWindowTextA(str);
+	strcpy(username, str);
+	CreateThread(NULL, 0, GerServerCommand, (LPVOID)username, 0, NULL);
+
 }
 void CMainClientDlg::OnBnClickedExit()
 {
