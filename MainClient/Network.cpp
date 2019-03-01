@@ -193,7 +193,7 @@ bool Authentication(char* ServerIP, char* username, char* password)
 
 	if (InitSSL(ServerIP, 50005) == -1)
 	{
-		MessageBox(0, "连接失败！", 0, 0);
+		MessageBox(0, "连接失败！", "失败", 0);
 		return FALSE;
 	}
 	GetReplyInfo(info);
@@ -212,31 +212,31 @@ bool Authentication(char* ServerIP, char* username, char* password)
 	//检查当前账号是否存在
 	if (strcmp(info, "INVALID CLIENT") == 0)
 	{
-		MessageBox(0, "INVALID CLIENT", 0, 0);
+		MessageBox(0, "用户名不存在", "失败", 0);
 		return FALSE;
 	}
 	//检查当前账号是否在线
 	if (strcmp(info, "ALREADY LOGIN") == 0)
 	{
-		MessageBox(0, "ALREADY LOGIN", 0, 0);
+		MessageBox(0, "已经登录", "失败", 0);
 		return FALSE;
 	}
 	//检查密码
 	if (strcmp(info, "WRONG PASSWD") == 0)
 	{
-		MessageBox(0, "WRONG PASSWD", 0, 0);
+		MessageBox(0, "密码错误", "失败", 0);
 		return FALSE;
 	}
 	//检查 mac 是否与注册时的一致
 	if (strcmp(info, "NO_LOGIN") == 0)
 	{
-		MessageBox(0, "NO_LOGIN", 0, 0);
+		MessageBox(0, "NO_LOGIN", "失败", 0);
 		return FALSE;
 	}
 	//检查 mac 是否与注册时的一致
 	if (strcmp(info, "MAC_DIFF") == 0)
 	{
-		MessageBox(0, "MAC_DIFF", 0, 0);
+		MessageBox(0, "MAC地址与服务器端不匹配", "失败", 0);
 		return FALSE;
 	}
 	// 首次登陆，需要注册
@@ -244,7 +244,7 @@ bool Authentication(char* ServerIP, char* username, char* password)
 	{
 		if (!RegisterClient())
 		{
-			MessageBox(0, "注册失败", 0, 0);
+			MessageBox(0, "注册失败", "失败", 0);
 			return FALSE;
 		}
 	}
@@ -478,7 +478,7 @@ bool RemoteFastScan(char* filename)
 	}
 }
 
-DWORD _stdcall GerServerCommand(LPVOID username)
+DWORD _stdcall GetServerCommand(LPVOID username)
 {
 	//循环从服务器获取命令
 	while (1)

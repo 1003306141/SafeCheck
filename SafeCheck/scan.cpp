@@ -467,7 +467,6 @@ void Scaner::GetKeyConfig()
 }
 
 //Êý¾Ý¿â²Ù×÷
-
 /*
 void Scaner::query_sql(char* sql)
 {

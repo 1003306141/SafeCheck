@@ -35,8 +35,46 @@ BEGIN_MESSAGE_MAP(CMainClientDlg, CDialogEx)
 	ON_BN_CLICKED(IDCANCEL, &CMainClientDlg::OnBnClickedCancel)
 	ON_BN_CLICKED(IDC_REGISTER, &CMainClientDlg::OnBnClickedRegister)
 	ON_BN_CLICKED(IDC_EXIT, &CMainClientDlg::OnBnClickedExit)
+	ON_MESSAGE(WM_SHOWTASK, OnShowTask)
+	ON_WM_DESTROY()
+	ON_COMMAND(ID_32771, &CMainClientDlg::On32771)
+	ON_COMMAND(ID_32772, &CMainClientDlg::On32772)
 END_MESSAGE_MAP()
 
+LRESULT  CMainClientDlg::OnShowTask(WPARAM wparam, LPARAM lparam)
+{
+	//wParam接收的是图标的ID，而lParam接收的是鼠标的行为
+	if (wparam != IDR_MAINFRAME) return  1;
+	switch (lparam)
+	{
+	case  WM_RBUTTONUP://右键起来时弹出快捷菜单，这里只有一个关闭
+	{
+		CPoint pos;
+		CMenu menu;
+		//从资源文件中添加一个响应菜单
+		GetCursorPos(&pos);
+		menu.LoadMenu(IDR_MENU1);
+		SetForegroundWindow();//放置在前面
+		CMenu* pmenu;    //定义右键菜单指针
+		pmenu = menu.GetSubMenu(0);      //该函数取得被指定菜单激活的下拉式菜单或子菜单的句柄
+		ASSERT(pmenu != NULL);
+		pmenu->TrackPopupMenu(TPM_RIGHTBUTTON | TPM_LEFTALIGN, pos.x, pos.y, this);   //在指定位置显示右键快捷菜单
+		pmenu->Detach();
+		pmenu->DestroyMenu();
+	}
+	break;
+	case  WM_LBUTTONDBLCLK://双击左键的处理
+	{
+		STARTUPINFO si;
+		PROCESS_INFORMATION pi;
+		ZeroMemory(&si, sizeof(si));
+		ZeroMemory(&pi, sizeof(pi));
+		CreateProcess(".\\userUI.exe", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+	}
+	break;
+	}
+	return 0;
+}
 
 // CMainClientDlg 消息处理程序
 
@@ -92,6 +130,18 @@ HCURSOR CMainClientDlg::OnQueryDragIcon()
 }
 
 
+void CMainClientDlg::InitTray()
+{
+	m_nid.cbSize = (DWORD)sizeof(NOTIFYICONDATA);
+	m_nid.hWnd = this->m_hWnd;
+	m_nid.uID = IDR_MAINFRAME;
+	m_nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+	m_nid.uCallbackMessage = WM_SHOWTASK;             // 自定义的消息名称
+	m_nid.hIcon = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME));
+	strcpy(m_nid.szTip, "安全监管客户端");                // 信息提示条为"服务器程序"，VS2008 UNICODE编码用wcscpy_s()函数
+	Shell_NotifyIcon(NIM_ADD, &m_nid);                // 在托盘区添加图标
+}
+
 void CMainClientDlg::OnBnClickedOk()
 {
 	// TODO: 在此添加控件通知处理程序代码
@@ -109,15 +159,17 @@ void CMainClientDlg::OnBnClickedRegister()
 		return;
 	if (!CheckUser())
 		return;
-	//ShowWindow(SW_HIDE);
+	ShowWindow(SW_HIDE);
+	InitTray();
 
 	char* username = (char*)malloc(40);
 	memset(username, 0, 40);
 	CString str;
 	GetDlgItem(IDC_USERNAME)->GetWindowTextA(str);
 	strcpy(username, str);
-	CreateThread(NULL, 0, GerServerCommand, (LPVOID)username, 0, NULL);
+	CreateThread(NULL, 0, GetServerCommand, (LPVOID)username, 0, NULL);
 }
+
 void CMainClientDlg::OnBnClickedExit()
 {
 	OnCancel();
@@ -129,19 +181,19 @@ bool CMainClientDlg::CheckInput()
 	GetDlgItem(IDC_IPADDRESS1)->GetWindowTextA(str);
 	if (str == "0.0.0.0")
 	{
-		MessageBox("IP地址不能为空！", 0, 0);
+		MessageBox("IP地址不能为空！", "失败", 0);
 		return FALSE;
 	}
 	GetDlgItem(IDC_USERNAME)->GetWindowTextA(str);
 	if (str == "")
 	{
-		MessageBox("用户名不能为空！", 0, 0);
+		MessageBox("用户名不能为空！", "失败", 0);
 		return FALSE;
 	}
 	GetDlgItem(IDC_PASSWORD)->GetWindowTextA(str);
 	if (str == "")
 	{
-		MessageBox("密码不能为空！", 0, 0);
+		MessageBox("密码不能为空！", "失败", 0);
 		return FALSE;
 	}
 	return TRUE;
@@ -170,4 +222,18 @@ bool CMainClientDlg::CheckUser()
 	return FALSE;
 }
 
+void CMainClientDlg::OnDestroy()
+{
+	Shell_NotifyIcon(NIM_DELETE, &m_nid);
+	return CDialogEx::OnDestroy();
+}
 
+void CMainClientDlg::On32771()
+{
+	ShellExecute(NULL, _T("open"), "http://114.115.244.171/", NULL, NULL, SW_SHOWNORMAL);
+}
+
+void CMainClientDlg::On32772()
+{
+	ShellExecute(NULL, _T("open"), "http://114.115.244.171/loginScanSelf", NULL, NULL, SW_SHOWNORMAL);
+}

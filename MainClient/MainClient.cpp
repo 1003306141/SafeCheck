@@ -104,3 +104,4 @@ BOOL CMainClientApp::InitInstance()
 	return FALSE;
 }
 
+

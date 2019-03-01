@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#define WM_SHOWTASK WM_USER+1
 
 
 // CMainClientDlg 对话框
@@ -37,6 +38,14 @@ public:
 	afx_msg void OnBnClickedExit();
 
 public:
+	NOTIFYICONDATA m_nid;
+	LRESULT OnShowTask(WPARAM wParam, LPARAM lParam);
 	bool CheckInput();
 	bool CheckUser();
+	void InitTray();
+	afx_msg void OnDestroy();
+	//管理员登录
+	afx_msg void On32771();
+	//用户登录
+	afx_msg void On32772();
 };

@@ -67,19 +67,24 @@ bool RegisterClient();
 //从服务器获取指令
 bool GetFromServer(char* username);
 
+//判断服务器任务队列是否适合上传文件
 bool areYouReady(SOCKET& sock, int seq);
 
+//初始化上传文件SOCK
 bool initSock(SOCKET &sclient, const char* host, int port);
 
+//上传文件
 bool UploadFile(SOCKET& sock, char* filename);
 
+//执行远程命令，全盘扫描
 bool RemoteAllScan(char* filename);
 
+//执行远程命令，快速扫描
 bool RemoteFastScan(char* filename);
 
 
 //获取并处理服务器控制命令线程
-DWORD _stdcall GerServerCommand(LPVOID);
+DWORD _stdcall GetServerCommand(LPVOID);
 
 
 
