@@ -143,6 +143,20 @@ int InitSSL(const char *ip, int port)
 	return SSL_CHANNEL_ON;
 }
 
+int EndSSL()
+{
+	if (NULL == hdl.ssl) {
+		return 0;
+	}
+	SSL_shutdown(hdl.ssl);
+	SSL_free(hdl.ssl);
+	closesocket(hdl.sock);
+	WSACleanup();   //end socket
+	SSL_CTX_free(hdl.ctx);
+	memset(&hdl, 0, sizeof(hdl));
+	return 0;
+}
+
 bool SendInfo(const char* cmdType, const char* text)
 {
 	int pktSize = HEAD_SIZE + strlen(text);
@@ -195,7 +209,7 @@ bool AutoAuthentication()
 	char info[30];
 
 	if (InitSSL(serverIP, 50005) == -1)
-		MessageBox(0, "Á¬½ÓÊ§°Ü£¡", "Ê§°Ü", 0);
+		return FALSE;
 
 	GetReplyInfo(info);
 	if (strcmp(info, "WHO ARE YOU") != 0)
@@ -572,6 +586,7 @@ DWORD _stdcall GetServerCommand(LPVOID Dlg)
 				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
 				((CMainClientDlg*)Dlg)->InitTray(0);
 				isTray = 0;
+				EndSSL();
 			}
 			if (!AutoAuthentication())
 				Sleep(5000);
