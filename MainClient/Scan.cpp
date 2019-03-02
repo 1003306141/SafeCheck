@@ -368,9 +368,9 @@ int Scaner::findstr(MyFile* file)
 
 	while (!feof(fp))
 	{
-		char* buf = (char*)malloc(4096);
-		memset(buf, 0, 4096);
-		fgets(buf, 4096, fp);
+		char* buf = (char*)malloc(2048);
+		memset(buf, 0, 2048);
+		fscanf(fp, "%s", buf);
 		for (int i = 0; i < mykey.count; i++)
 		{
 			if (strstr(buf, mykey.Key[i]) != NULL)
@@ -381,9 +381,9 @@ int Scaner::findstr(MyFile* file)
 				strcpy(file->key, mykey.Key[i]);
 				//关键字前后文
 				strcpy(file->comment, buf);
-				if (file->comment[4095] == '\0')
-					file->comment[4094] = '\n';
-				
+				if (file->comment[2047] != '\0')
+					file->comment[2047] = '\0';
+
 				//查找关键字位置
 				fseek(fp, 0, SEEK_SET);
 				char* buf2 = (char*)malloc(file->size);
