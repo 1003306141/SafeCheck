@@ -40,6 +40,7 @@ public:
 public:
 	NOTIFYICONDATA m_nid;
 	LRESULT OnShowTask(WPARAM wParam, LPARAM lParam);
+	bool AutoStart();
 	bool CheckInput();
 	bool CheckUser();
 	bool CreateConfig();

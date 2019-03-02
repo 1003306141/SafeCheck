@@ -85,8 +85,23 @@ BOOL CMainClientDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
-	GetDlgItem(IDC_IPADDRESS1)->SetWindowTextA("114.115.244.171");
+	
+	if (AutoStart())
+	{
+		//任务栏不显示
+		ModifyStyleEx(WS_EX_APPWINDOW, WS_EX_TOOLWINDOW);
+		//主窗口不显示
+		WINDOWPLACEMENT wp;
+		wp.length = sizeof(WINDOWPLACEMENT);
+		wp.flags = WPF_RESTORETOMAXIMIZED;
+		wp.showCmd = SW_HIDE;
+		SetWindowPlacement(&wp);
 
+		OnBnClickedRegister();
+	}
+	
+
+	GetDlgItem(IDC_IPADDRESS1)->SetWindowTextA("114.115.244.171");
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -124,6 +139,27 @@ void CMainClientDlg::OnPaint()
 HCURSOR CMainClientDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
+}
+
+bool CMainClientDlg::AutoStart()
+{
+	FILE* fp = fopen("config.ini", "r");
+	if (fp == NULL)
+		return FALSE;
+	char ServerIP[20], username[20], password[20];
+	fscanf(fp, "%s", ServerIP);
+	fscanf(fp, "%s", username);
+	fscanf(fp, "%s", password);
+	fclose(fp);
+
+	CString str1(ServerIP);
+	CString str2(username);
+	CString str3(password);
+	GetDlgItem(IDC_IPADDRESS1)->SetWindowTextA(str1);
+	GetDlgItem(IDC_USERNAME)->SetWindowTextA(str2);
+	GetDlgItem(IDC_PASSWORD)->SetWindowTextA(str3);
+
+	return TRUE;
 }
 
 void CMainClientDlg::InitTray(int n)
@@ -208,10 +244,7 @@ bool CMainClientDlg::CheckUser()
 	strcpy(password, str);
 
 	if (Authentication(ServerIP, username, password))
-	{
-		MessageBox("注册成功", 0, 0);
 		return TRUE;
-	}
 
 	return FALSE;
 }
