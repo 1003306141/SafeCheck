@@ -368,8 +368,8 @@ int Scaner::findstr(MyFile* file)
 
 	while (!feof(fp))
 	{
-		char* buf = (char*)malloc(2048);
-		memset(buf, 0, 2048);
+		char* buf = (char*)malloc(1024);
+		memset(buf, 0, 1024);
 		fscanf(fp, "%s", buf);
 		for (int i = 0; i < mykey.count; i++)
 		{
@@ -381,8 +381,8 @@ int Scaner::findstr(MyFile* file)
 				strcpy(file->key, mykey.Key[i]);
 				//关键字前后文
 				strcpy(file->comment, buf);
-				if (file->comment[2047] != '\0')
-					file->comment[2047] = '\0';
+				if (file->comment[1023] != '\0')
+					file->comment[1023] = '\0';
 
 				//查找关键字位置
 				fseek(fp, 0, SEEK_SET);
@@ -471,7 +471,7 @@ void Scaner::CreateLog(int type)
 	fp = fopen(filename, "a+");
 	if (fp != NULL)
 		for (int i = 0; i < v.size(); i++)
-			fprintf(fp, "%s|%d-%s-1-%d:%d|%s", v[i].path, v[i].rank, v[i].key, v[i].position, v[i].size, v[i].comment);
+			fprintf(fp, "%s|%d-%s-1-%d:%d|%s\n", v[i].path, v[i].rank, v[i].key, v[i].position, v[i].size, v[i].comment);
 	fclose(fp);
 
 	FileGBKToUTF8(filename);
@@ -485,7 +485,10 @@ void Scaner::CreateLog(int type)
 void Scaner::GetKeyConfig()
 {
 	for (int i = 0; i < 100; i++)
-		mykey.Key[i] = (char*)malloc(20);
+	{
+		mykey.Key[i] = (char*)malloc(60);
+		memset(mykey.Key[i], 0, 60);
+	}
 	FILE* fp;
 	fp = fopen("Fullkeywords.txt", "r");
 	if (fp == NULL)

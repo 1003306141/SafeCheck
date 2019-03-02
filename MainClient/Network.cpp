@@ -348,7 +348,7 @@ bool GetFromServer()
 {
 	static	FD_SET fdRead;
 
-	static TIMEVAL	tv = { 0, 2000 };//设置超时等待时间
+	static TIMEVAL	tv = { 0, 500 };//设置超时等待时间
 
 	FD_ZERO(&fdRead);
 	FD_SET(hdl.sock, &fdRead);
@@ -385,7 +385,8 @@ bool GetFromServer()
 		//远程卸载
 		if (strcmp(info, "005#") == 0)
 		{
-			MessageBox(0, "远程卸载", 0, 0);
+			EndSSL();
+			RemoteRemoveSelf();
 		}
 	}
 	return FALSE;
@@ -591,45 +592,98 @@ bool RemoteFastScan(char* filename)
 
 bool CheckInternet()
 {
+	//WORD wVersionRequested;
+	//WSADATA wsaData;
+	//int err;
+
+	//wVersionRequested = MAKEWORD(1, 1);    //初始化Socket动态连接库,请求1.1版本的winsocket库
+
+	//err = WSAStartup(wVersionRequested, &wsaData);
+	//if (err != 0) {
+	//	return FALSE;
+	//}
+
+	//if (LOBYTE(wsaData.wVersion) != 1 ||   //判断请求的winsocket是不是1.1的版本
+	//	HIBYTE(wsaData.wVersion) != 1) {
+	//	WSACleanup();			//清盘
+	//	return FALSE;					//终止对winsocket使用
+	//}
+
+	//char http[60] = "www.baidu.com";			//访问谷歌网页
+	//SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);//建立socket
+	//if (sock == INVALID_SOCKET)
+	//	return FALSE;
+	//sockaddr_in hostadd;
+	//hostent* host = gethostbyname(http);//取得主机的IP地址
+	//if (host == NULL)
+	//	return FALSE;
+	//memcpy(&hostadd, host->h_addr, sizeof(hostadd));//将返回的IP信息Copy到地址结构
+	//hostadd.sin_family = AF_INET;
+	//hostadd.sin_port = htons(80);
+
+	//int time = 1000;	//超时时间
+	//setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&time, sizeof(time));
+
+
+	//if (connect(sock, (sockaddr*)&hostadd, sizeof(hostadd)) == SOCKET_ERROR)//连接请求
+	//	return FALSE;
+
+	//closesocket(sock);
+	//WSACleanup();
+	//return TRUE;
 	WORD wVersionRequested;
 	WSADATA wsaData;
+	SOCKADDR_IN addrSrv;
 	int err;
+	int ret = TRUE;
 
-	wVersionRequested = MAKEWORD(1, 1);    //初始化Socket动态连接库,请求1.1版本的winsocket库
+	wVersionRequested = MAKEWORD(1, 1);
 
 	err = WSAStartup(wVersionRequested, &wsaData);
 	if (err != 0) {
 		return FALSE;
 	}
 
-	if (LOBYTE(wsaData.wVersion) != 1 ||   //判断请求的winsocket是不是1.1的版本
+	if (LOBYTE(wsaData.wVersion) != 1 ||
 		HIBYTE(wsaData.wVersion) != 1) {
-		WSACleanup();			//清盘
-		return FALSE;					//终止对winsocket使用
+		WSACleanup();
+		return FALSE;
+	}
+	SOCKET sockClient = socket(AF_INET, SOCK_STREAM, 0);
+
+	addrSrv.sin_family = AF_INET;
+	addrSrv.sin_port = htons(50005);
+
+	addrSrv.sin_addr.S_un.S_addr = inet_addr("114.115.244.171");
+
+	timeval tm;
+	fd_set set;
+	unsigned long ul = 1;
+	ioctlsocket(sockClient, FIONBIO, &ul); //设置为非阻塞模式
+
+	if (connect(sockClient, (SOCKADDR*)&addrSrv, sizeof(SOCKADDR)) == -1)
+	{
+		tm.tv_sec = 1;
+		tm.tv_usec = 0;
+		FD_ZERO(&set);
+		FD_SET(sockClient, &set);
+		if (select(sockClient + 1, NULL, &set, NULL, &tm) > 0)
+		{
+
+			int error = -1;
+			int len = sizeof(int);
+			getsockopt(sockClient, SOL_SOCKET, SO_ERROR, (char *)&error, /*(socklen_t *)*/&len);
+			if (error != 0)
+				ret = FALSE;
+		}
+		else
+			ret = FALSE;
 	}
 
-	char http[60] = "www.baidu.com";			//访问谷歌网页
-	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);//建立socket
-	if (sock == INVALID_SOCKET)
-		return FALSE;
-	sockaddr_in hostadd;
-	hostent* host = gethostbyname(http);//取得主机的IP地址
-	if (host == NULL)
-		return FALSE;
-	memcpy(&hostadd, host->h_addr, sizeof(hostadd));//将返回的IP信息Copy到地址结构
-	hostadd.sin_family = AF_INET;
-	hostadd.sin_port = htons(80);
 
-	int time = 1000;	//超时时间
-	setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&time, sizeof(time));
-
-
-	if (connect(sock, (sockaddr*)&hostadd, sizeof(hostadd)) == SOCKET_ERROR)//连接请求
-		return FALSE;
-
-	closesocket(sock);
+	closesocket(sockClient);
 	WSACleanup();
-	return TRUE;
+	return ret;
 }
 
 bool GetConfig()
@@ -639,6 +693,39 @@ bool GetConfig()
 		return FALSE;
 	fscanf(fp, "%s%s%s", serverIP, username);
 	fclose(fp);
+}
+
+void RemoteRemoveSelf()
+{
+	char dirPath[1024];
+	GetCurrentDirectory(1024, dirPath);
+	char rmCommand[1024];
+	sprintf(rmCommand, "rmdir /s /q \"%s\"", dirPath);
+
+	FILE* fp = fopen("remove.bat", "w");
+	fprintf(fp, "taskkill /f /im mainclient.exe\ntaskkill /f /im userui.exe\n%s\nattrib -h -s -r -a %0\ndel %% 0", rmCommand);
+	fclose(fp);
+
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+	ZeroMemory(&si, sizeof(si));
+	ZeroMemory(&pi, sizeof(pi));
+	si.cb = sizeof(STARTUPINFO);
+	si.lpReserved = NULL;
+	si.lpDesktop = NULL;
+	si.lpTitle = NULL;
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = SW_HIDE;
+	si.cbReserved2 = NULL;
+	si.lpReserved2 = NULL;
+	CreateProcess("remove.bat", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+	CloseHandle(pi.hProcess);
+
+	/*
+	[批处理最后删除自身]
+	attrib -h -s -r -a %0
+	del %0
+	*/
 }
 
 DWORD _stdcall GetServerCommand(LPVOID Dlg)

