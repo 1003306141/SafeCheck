@@ -17,6 +17,21 @@ string GBKToUTF8(const char* strGBK)
 	return strTemp;
 }
 
+void UTF8ToGBK(char* strUTF8)
+{
+	int len = MultiByteToWideChar(CP_UTF8, 0, strUTF8, -1, NULL, 0);
+	wchar_t* wszGBK = new wchar_t[len + 1];
+	memset(wszGBK, 0, len * 2 + 2);
+	MultiByteToWideChar(CP_UTF8, 0, strUTF8, -1, wszGBK, len);
+	len = WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, NULL, 0, NULL, NULL);
+	char* szGBK = new char[len + 1];
+	memset(szGBK, 0, len + 1);
+	WideCharToMultiByte(CP_ACP, 0, wszGBK, -1, szGBK, len, NULL, NULL);
+	strcpy(strUTF8, szGBK);
+	if (wszGBK) delete[] wszGBK;
+	if (szGBK) delete[] szGBK;
+}
+
 void FileGBKToUTF8(const char* filename)
 {
 	FILE* fp = fopen(filename, "rb");
@@ -472,27 +487,19 @@ void Scaner::GetKeyConfig()
 	for (int i = 0; i < 100; i++)
 		mykey.Key[i] = (char*)malloc(20);
 	FILE* fp;
-	fp = fopen("key.ini", "r");
+	fp = fopen("Fullkeywords.txt", "r");
 	if (fp == NULL)
-	{
-		mykey.count = 3;
-		mykey.Key[0] = "绝密";
-		mykey.Key[1] = "机密";
-		mykey.Key[2] = "秘密";
-
-		//不存在文件则默认生成一个关键字文件
-		FILE* fp2 = fopen("key.ini", "w");
-		if (fp2 != NULL)
-		{
-			for (int i = 0; i < mykey.count; i++)
-				fprintf(fp2, "%s\n", mykey.Key[i]);
-			fclose(fp2);
-		}
 		return;
-	}
+
 	int count = 0;
+	int nono = 0;
 	while (!feof(fp))
-		fscanf(fp, "%s", mykey.Key[count++]);
+		fscanf(fp, "%d-%s", &nono, mykey.Key[count++]);
+
+	//多执行一次，这里减一
+	count--;
+	for (int i = 0; i < count; i++)
+		UTF8ToGBK(mykey.Key[i]);
 	mykey.count = count;
 	fclose(fp);
 }

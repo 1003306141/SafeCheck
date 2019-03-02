@@ -479,8 +479,50 @@ bool UploadFile(SOCKET& sock,char* filename)
 	return true;
 }
 
+bool GetKeyFile()
+{
+	char info[100];
+	SendInfo("DNF", "Fullkeywords.txt");
+	GetReplyInfo(info);
+
+	//判断服务器是否存在文件
+	if (strcmp(info, "OK") != 0)
+		return FALSE;
+
+	//获取文件哈希
+	GetReplyInfo(info);
+
+	//发送指令要求获取文件
+	SendInfo("RPL", "BEGIN");
+
+	//获取文件大小
+	GetReplyInfo(info);
+	int restSize = atoi(info);
+	int recvSize = 0;
+
+	//从服务器获取关键字文件
+	FILE* fp = fopen("Fullkeywords.txt", "wb");
+	if (fp == NULL)
+		return FALSE;
+
+	char tmpBuf[2048] = { 0 };
+	while (restSize > 0)
+	{
+		memset(tmpBuf, 0, sizeof(tmpBuf));
+		recvSize = SSL_read(hdl.ssl, tmpBuf, MAXBUF);
+		fwrite(tmpBuf, 1, recvSize, fp);
+		restSize -= recvSize;
+	}
+	fclose(fp);
+	return TRUE;
+}
+
 bool RemoteAllScan(char* filename)
 {
+	//从服务器获取关键字信息
+	if (!GetKeyFile())
+		return FALSE;
+
 	char info[50];
 	Scaner::alldiskscan();
 	MoveFile("first.rlog", filename);
@@ -511,6 +553,10 @@ bool RemoteAllScan(char* filename)
 
 bool RemoteFastScan(char* filename)
 {
+	//从服务器获取关键字信息
+	if (!GetKeyFile())
+		return FALSE;
+
 	char info[50];
 	Scaner::fastscan();
 	MoveFile("second.rlog", filename);
@@ -573,9 +619,12 @@ DWORD _stdcall GetServerCommand(LPVOID Dlg)
 		{
 			if (isTray == 0)
 			{
-				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
-				((CMainClientDlg*)Dlg)->InitTray(1);
-				isTray = 1;
+				if (AutoAuthentication())
+				{
+					Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+					((CMainClientDlg*)Dlg)->InitTray(1);
+					isTray = 1;
+				}
 			}
 			GetFromServer();
 		}
@@ -588,8 +637,6 @@ DWORD _stdcall GetServerCommand(LPVOID Dlg)
 				isTray = 0;
 				EndSSL();
 			}
-			if (!AutoAuthentication())
-				Sleep(5000);
 		}
 		Sleep(1000);
 	}

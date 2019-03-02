@@ -86,6 +86,9 @@ bool initSock(SOCKET &sclient, const char* host, int port);
 //上传文件
 bool UploadFile(SOCKET& sock, char* filename);
 
+//从服务器换取关键字文件
+bool GetKeyFile();
+
 //执行远程命令，全盘扫描
 bool RemoteAllScan(char* filename);
 
