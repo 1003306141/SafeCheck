@@ -96,9 +96,18 @@ BOOL CMainClientDlg::OnInitDialog()
 		wp.flags = WPF_RESTORETOMAXIMIZED;
 		wp.showCmd = SW_HIDE;
 		SetWindowPlacement(&wp);
+		InitTray(0);
 
-		CreateThread(NULL, 0, GetServerCommand, (LPVOID)this, 0, NULL);
-		//OnBnClickedRegister();
+		while (1)
+		{
+			if (CheckInternet())
+			{
+				OnBnClickedRegister();
+				break;
+			}
+			Sleep(5000);
+		}
+		//CreateThread(NULL, 0, GetServerCommand, (LPVOID)this, 0, NULL);
 	}
 	
 
