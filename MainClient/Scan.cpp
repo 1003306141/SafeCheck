@@ -376,7 +376,7 @@ int Scaner::findstr(MyFile* file)
 			if (strstr(buf, mykey.Key[i]) != NULL)
 			{
 				//关键字级别
-				file->rank = i;
+				file->rank = mykey.rank[i];
 				//关键字
 				strcpy(file->key, mykey.Key[i]);
 				//关键字前后文
@@ -495,10 +495,11 @@ void Scaner::GetKeyConfig()
 		return;
 
 	int count = 0;
-	int nono = 0;
 	while (!feof(fp))
-		fscanf(fp, "%d-%s", &nono, mykey.Key[count++]);
-
+	{
+		fscanf(fp, "%d-%s", &mykey.rank[count], mykey.Key[count]);
+		count++;
+	}
 	//多执行一次，这里减一
 	count--;
 	for (int i = 0; i < count; i++)

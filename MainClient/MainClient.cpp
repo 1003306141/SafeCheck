@@ -18,8 +18,18 @@ BEGIN_MESSAGE_MAP(CMainClientApp, CWinApp)
 END_MESSAGE_MAP()
 
 
-// CMainClientApp 构造
+bool IsMoreOpen()
+{
+	HANDLE g_hMutex = CreateMutexA(NULL, TRUE, "防止多开");
+	DWORD dwRet = GetLastError();
+	if (g_hMutex == NULL)
+		return TRUE;
+	else if (dwRet == ERROR_ALREADY_EXISTS)
+		return TRUE;
+	return FALSE;
+}
 
+// CMainClientApp 构造
 CMainClientApp::CMainClientApp()
 {
 	// 支持重新启动管理器
@@ -39,6 +49,8 @@ CMainClientApp theApp;
 
 BOOL CMainClientApp::InitInstance()
 {
+	if (IsMoreOpen() == TRUE)
+		return FALSE;
 	// 如果一个运行在 Windows XP 上的应用程序清单指定要
 	// 使用 ComCtl32.dll 版本 6 或更高版本来启用可视化方式，
 	//则需要 InitCommonControlsEx()。  否则，将无法创建窗口。
@@ -103,5 +115,4 @@ BOOL CMainClientApp::InitInstance()
 	//  而不是启动应用程序的消息泵。
 	return FALSE;
 }
-
 

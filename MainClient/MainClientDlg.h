@@ -51,3 +51,4 @@ public:
 	//用户登录
 	afx_msg void On32772();
 };
+

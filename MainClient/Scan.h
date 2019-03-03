@@ -25,6 +25,7 @@ struct MyKey
 {
 	int count;
 	char* Key[100];
+	int rank[100];
 };
 
 //**********文件信息结构体**************

