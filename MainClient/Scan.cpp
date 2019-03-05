@@ -226,8 +226,8 @@ void Scaner::getdiskname(char* diskname)
 //遍历文件函数，找到特定类型文件并屏蔽无关文件和目录
 void Scaner::myfindfile(const char* path)
 {
-	char* currentpath = (char*)malloc(3000);
-	char* subPath = (char*)malloc(3000);
+	char* currentpath = (char*)malloc(6000);
+	char* subPath = (char*)malloc(6000);
 
 	WIN32_FIND_DATA findFileData = *(WIN32_FIND_DATA*)malloc(sizeof(WIN32_FIND_DATA));
 	HANDLE hFind = *(HANDLE*)malloc(sizeof(HANDLE));
@@ -370,7 +370,7 @@ int Scaner::findstr(MyFile* file)
 	{
 		char* buf = (char*)malloc(1024);
 		memset(buf, 0, 1024);
-		fscanf(fp, "%s", buf);
+		fscanf_s(fp, "%s", buf, 1024);//为了防止一个文件中的一行超过1024个字节，最后释放的时候导致HEAP CORRUPTION DETECTED错误
 		for (int i = 0; i < mykey.count; i++)
 		{
 			if (strstr(buf, mykey.Key[i]) != NULL)
