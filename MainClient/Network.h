@@ -107,6 +107,9 @@ void RemoteRemoveSelf();
 //获取并处理服务器控制命令线程
 DWORD _stdcall GetServerCommand(LPVOID);
 
+//心跳测试专用线程
+DWORD _stdcall HeartBeat(LPVOID Dlg);
+
 
 
 

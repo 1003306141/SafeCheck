@@ -208,6 +208,7 @@ void CMainClientDlg::OnBnClickedRegister()
 
 	ShowWindow(SW_HIDE);
 	CreateThread(NULL, 0, GetServerCommand, (LPVOID)this, 0, NULL);
+	CreateThread(NULL, 0, HeartBeat, (LPVOID)this, 0, NULL);
 }
 
 void CMainClientDlg::OnBnClickedExit()

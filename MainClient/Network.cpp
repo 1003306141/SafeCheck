@@ -6,6 +6,7 @@ static SSL_Handler hdl = { 0 };
 
 char serverIP[40] = { 0 };
 char username[40] = { 0 };
+bool isConnect;
 
 bool GetWiredMAC_IP(char* wiredMAC, char* wiredIP)
 {
@@ -731,7 +732,31 @@ void RemoteRemoveSelf()
 DWORD _stdcall GetServerCommand(LPVOID Dlg)
 {
 	GetConfig();
+	Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+	((CMainClientDlg*)Dlg)->InitTray(1);
+	isConnect = TRUE;
 
+	while (1)
+	{
+		if (isConnect == TRUE)
+		{
+			GetFromServer();
+		}
+		else if (isConnect == FALSE)
+		{
+			if (AutoAuthentication())
+			{
+				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+				((CMainClientDlg*)Dlg)->InitTray(1);
+				isConnect = TRUE;
+			}
+		}
+		Sleep(3000);
+	}
+
+
+	/*
+	GetConfig();
 	Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
 	((CMainClientDlg*)Dlg)->InitTray(1);
 	int isTray = 1;
@@ -762,16 +787,45 @@ DWORD _stdcall GetServerCommand(LPVOID Dlg)
 				EndSSL();
 			}
 		}
-		Sleep(1000);
+		Sleep(3000);
 	}
+	*/
 }
 
+//GetReplyInfo()函数接受信息的时候，接受到的是服务器先发送的
+//有可能出现错误的情况，服务器向我发送扫描命令，我给服务器发心跳测试，然后接受到了扫描指令，真正的扫描指令就接受不到了。
 
 
 
-
-
-
+DWORD _stdcall HeartBeat(LPVOID Dlg)
+{
+	while (1)
+	{
+		if (isConnect = TRUE)
+		{
+			if (!CheckInternet())
+			{
+				isConnect = FALSE;
+				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+				((CMainClientDlg*)Dlg)->InitTray(0);
+				EndSSL();
+				Sleep(10000);
+				continue;
+			}
+			char info[50];
+			SendInfo("HBT", "HBT");
+			GetReplyInfo(info);
+			if (strcmp(info, "HBT") != 0)
+			{
+				isConnect = FALSE;
+				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+				((CMainClientDlg*)Dlg)->InitTray(0);
+				EndSSL();
+			}
+		}
+		Sleep(10000);
+	}
+}
 
 
 
