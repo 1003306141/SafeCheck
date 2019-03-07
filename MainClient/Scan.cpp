@@ -45,7 +45,7 @@ void FileGBKToUTF8(const char* filename)
 	string str = GBKToUTF8(buf);
 	fclose(fp);
 	remove(filename);
-	FILE* fp2 = fopen(filename, "w");
+	FILE* fp2 = fopen(filename, "wb");
 	if (fp2 == NULL)
 		return;
 	fwrite(str.c_str(), str.size(), 1, fp2);

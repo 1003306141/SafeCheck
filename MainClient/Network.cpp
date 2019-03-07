@@ -791,11 +791,8 @@ DWORD _stdcall GetServerCommand(LPVOID Dlg)
 	}
 	*/
 }
-
 //GetReplyInfo()函数接受信息的时候，接受到的是服务器先发送的
 //有可能出现错误的情况，服务器向我发送扫描命令，我给服务器发心跳测试，然后接受到了扫描指令，真正的扫描指令就接受不到了。
-
-
 
 DWORD _stdcall HeartBeat(LPVOID Dlg)
 {
@@ -809,7 +806,7 @@ DWORD _stdcall HeartBeat(LPVOID Dlg)
 				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
 				((CMainClientDlg*)Dlg)->InitTray(0);
 				EndSSL();
-				Sleep(10000);
+				Sleep(5000);
 				continue;
 			}
 			char info[50];
@@ -822,8 +819,15 @@ DWORD _stdcall HeartBeat(LPVOID Dlg)
 				((CMainClientDlg*)Dlg)->InitTray(0);
 				EndSSL();
 			}
+			if (strcmp(info, "WHO ARE YOU") == 0)
+			{
+				isConnect = FALSE;
+				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+				((CMainClientDlg*)Dlg)->InitTray(0);
+				EndSSL();
+			}
 		}
-		Sleep(10000);
+		Sleep(5000);
 	}
 }
 

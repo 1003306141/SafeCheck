@@ -62,6 +62,9 @@ int InitSSL(const char *ip, int port);
 //向服务器发送信息
 bool SendInfo(const char* cmdType, const char* text);
 
+//结束SSL
+int EndSSL();
+
 //从服务器获取信息
 bool GetReplyInfo(char* info);
 
