@@ -7,6 +7,7 @@ static SSL_Handler hdl = { 0 };
 char serverIP[40] = { 0 };
 char username[40] = { 0 };
 bool isConnect;
+bool isScan = FALSE;
 
 bool GetWiredMAC_IP(char* wiredMAC, char* wiredIP)
 {
@@ -370,18 +371,22 @@ bool GetFromServer()
 		//全盘扫描
 		if (strcmp(info, "003#") == 0)
 		{
+			isScan = TRUE;
 			SendInfo("COK", "executing task");
 			char filename[40] = { 0 };
 			sprintf(filename, "first-%s.rlog", username);
 			RemoteAllScan(filename);
+			isScan = FALSE;
 		}
 		//快速扫描
 		if (strcmp(info, "006#") == 0)
 		{
+			isScan = TRUE;
 			SendInfo("COK", "executing task");
 			char filename[40] = { 0 };
 			sprintf(filename, "second-%s.rlog", username);
 			RemoteFastScan(filename);
+			isScan = FALSE;
 		}
 		//远程卸载
 		if (strcmp(info, "005#") == 0)
@@ -753,8 +758,6 @@ DWORD _stdcall GetServerCommand(LPVOID Dlg)
 		}
 		Sleep(3000);
 	}
-
-
 	/*
 	GetConfig();
 	Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
@@ -766,6 +769,7 @@ DWORD _stdcall GetServerCommand(LPVOID Dlg)
 	{
 		if (CheckInternet())
 		{
+
 			if (isTray == 0)
 			{
 				if (AutoAuthentication())
@@ -792,12 +796,18 @@ DWORD _stdcall GetServerCommand(LPVOID Dlg)
 	*/
 }
 //GetReplyInfo()函数接受信息的时候，接受到的是服务器先发送的
-//有可能出现错误的情况，服务器向我发送扫描命令，我给服务器发心跳测试，然后接受到了扫描指令，真正的扫描指令就接受不到了。
+//有可能出现错误的情况，服务器向我发送扫描命令，我给服务器发心跳测试，然后心跳函数接受到了扫描指令，真正的扫描指令就接受不到了。
+//同一线程心跳测试的问题就是该线程用于扫描后还是发送不了心跳测试
 
 DWORD _stdcall HeartBeat(LPVOID Dlg)
 {
 	while (1)
 	{
+		if (isScan == FALSE)
+		{
+			Sleep(30000);
+			continue;
+		}
 		if (isConnect = TRUE)
 		{
 			if (!CheckInternet())
@@ -827,7 +837,7 @@ DWORD _stdcall HeartBeat(LPVOID Dlg)
 				EndSSL();
 			}
 		}
-		Sleep(5000);
+		Sleep(10000);
 	}
 }
 

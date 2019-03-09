@@ -468,7 +468,7 @@ void Scaner::CreateLog(int type)
 
 	//生成日志文件
 	FILE* fp;
-	fp = fopen(filename, "a+");
+	fp = fopen(filename, "ab+");
 	if (fp != NULL)
 		for (int i = 0; i < v.size(); i++)
 			fprintf(fp, "%s|%d-%s-1-%d:%d|%s\n", v[i].path, v[i].rank, v[i].key, v[i].position, v[i].size, v[i].comment);
