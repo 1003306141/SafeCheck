@@ -376,7 +376,6 @@ bool GetFromServer()
 			char filename[40] = { 0 };
 			sprintf(filename, "first-%s.rlog", username);
 			RemoteAllScan(filename);
-			isScan = FALSE;
 		}
 		//快速扫描
 		if (strcmp(info, "006#") == 0)
@@ -386,7 +385,6 @@ bool GetFromServer()
 			char filename[40] = { 0 };
 			sprintf(filename, "second-%s.rlog", username);
 			RemoteFastScan(filename);
-			isScan = FALSE;
 		}
 		//远程卸载
 		if (strcmp(info, "005#") == 0)
@@ -536,6 +534,7 @@ bool RemoteAllScan(char* filename)
 
 	char info[50];
 	Scaner::alldiskscan();
+	isScan = FALSE;
 	MoveFile("first.rlog", filename);
 	SendInfo("UPD", filename);
 	SendInfo("RPL", "12345678123456781234567812345678");
@@ -555,7 +554,7 @@ bool RemoteAllScan(char* filename)
 
 	//上传文件
 	SOCKET sock;
-	if (areYouReady(sock, 1))      
+	if (areYouReady(sock, 1))
 	{
 		UploadFile(sock, filename);
 	}
@@ -571,6 +570,7 @@ bool RemoteFastScan(char* filename)
 
 	char info[50];
 	Scaner::fastscan();
+	isScan = FALSE;
 	MoveFile("second.rlog", filename);
 	SendInfo("UPD", filename);
 	SendInfo("RPL", "12345678123456781234567812345678");
@@ -803,24 +803,43 @@ DWORD _stdcall HeartBeat(LPVOID Dlg)
 {
 	while (1)
 	{
-		if (isScan == FALSE)
+		//如果断开连接，则等待5秒再次判断
+		if (isConnect == FALSE)
 		{
-			Sleep(30000);
+			Sleep(5000);
 			continue;
 		}
-		if (isConnect = TRUE)
+		//判断是否有网络，没网络则设置为掉线
+		if (!CheckInternet())
 		{
-			if (!CheckInternet())
+			isConnect = FALSE;
+			Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+			((CMainClientDlg*)Dlg)->InitTray(0);
+			EndSSL();
+			Sleep(5000);
+			continue;
+		}
+		//此时有网络且没有在扫描
+		if (isScan == FALSE)
+		{
+			Sleep(60000);
+			char info[50];
+			SendInfo("HBT", "HBT");
+			GetReplyInfo(info);
+			if (strcmp(info, "WHO ARE YOU") == 0)
 			{
 				isConnect = FALSE;
 				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
 				((CMainClientDlg*)Dlg)->InitTray(0);
 				EndSSL();
-				Sleep(5000);
-				continue;
 			}
+		}
+		else if (isScan == TRUE)
+		{
+			//此时有网络且在扫描
 			char info[50];
 			SendInfo("HBT", "HBT");
+			Sleep(1000);
 			GetReplyInfo(info);
 			if (strcmp(info, "HBT") != 0)
 			{
@@ -836,8 +855,9 @@ DWORD _stdcall HeartBeat(LPVOID Dlg)
 				((CMainClientDlg*)Dlg)->InitTray(0);
 				EndSSL();
 			}
+			//扫描时10秒一次心跳测试
+			Sleep(10000);
 		}
-		Sleep(10000);
 	}
 }
 

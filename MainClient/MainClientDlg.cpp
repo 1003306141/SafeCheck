@@ -156,8 +156,8 @@ bool CMainClientDlg::AutoStart()
 	FILE* fp = fopen("config.ini", "r");
 	if (fp == NULL)
 		return FALSE;
-	char ServerIP[20], username[20], password[20];
-	fscanf(fp, "%s", ServerIP);
+	char ServerIP[20], username[20], password[20], Port[10];
+	fscanf(fp, "%s %s", ServerIP, Port);
 	fscanf(fp, "%s", username);
 	fscanf(fp, "%s", password);
 	fclose(fp);
@@ -165,9 +165,11 @@ bool CMainClientDlg::AutoStart()
 	CString str1(ServerIP);
 	CString str2(username);
 	CString str3(password);
+	CString str4(Port);
 	GetDlgItem(IDC_IPADDRESS1)->SetWindowTextA(str1);
 	GetDlgItem(IDC_USERNAME)->SetWindowTextA(str2);
 	GetDlgItem(IDC_PASSWORD)->SetWindowTextA(str3);
+	GetDlgItem(IDC_PORT)->SetWindowTextA(str4);
 
 	return TRUE;
 }
@@ -182,7 +184,7 @@ void CMainClientDlg::InitTray(int n)
 	if(n == 1)
 		m_nid.hIcon = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME));
 	else m_nid.hIcon = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME1));
-	strcpy(m_nid.szTip, "安全监管客户端");                // 信息提示条为"服务器程序"，VS2008 UNICODE编码用wcscpy_s()函数
+	strcpy(m_nid.szTip, "保密自查客户端");                // 信息提示条为"服务器程序"，VS2008 UNICODE编码用wcscpy_s()函数
 	Shell_NotifyIcon(NIM_ADD, &m_nid);                // 在托盘区添加图标
 }
 
@@ -264,7 +266,7 @@ bool CMainClientDlg::CheckUser()
 bool CMainClientDlg::CreateConfig()
 {
 	CString str;
-	char ServerIP[20], username[20], password[20];
+	char ServerIP[20], username[20], password[20], Port[10];
 
 	GetDlgItem(IDC_IPADDRESS1)->GetWindowTextA(str);
 	strcpy(ServerIP, str);
@@ -275,13 +277,17 @@ bool CMainClientDlg::CreateConfig()
 	GetDlgItem(IDC_PASSWORD)->GetWindowTextA(str);
 	strcpy(password, str);
 
+	GetDlgItem(IDC_PORT)->GetWindowTextA(str);
+	if (str != "")
+		strcpy(Port, str);
+	else strcpy(Port, "80");
 	FILE* fp = fopen("config.ini", "w");
 	if (fp == NULL)
 	{
 		MessageBox("配置文件生成失败", "失败", 0);
 		return FALSE;
 	}
-	fprintf(fp, "%s\n%s\n%s\n", ServerIP, username, password);
+	fprintf(fp, "%s %s\n%s\n%s\n", ServerIP, Port, username, password);
 	fclose(fp);
 	return TRUE;
 }
@@ -294,10 +300,26 @@ void CMainClientDlg::OnDestroy()
 
 void CMainClientDlg::On32771()
 {
-	ShellExecute(NULL, _T("open"), "http://114.115.244.171/", NULL, NULL, SW_SHOWNORMAL);
+	char ServerIP[20], Port[10];
+	char webaddr[128];
+	FILE* fp = fopen("config.ini", "r");
+	if (fp == NULL)
+		MessageBox("缺少配置文件", "失败", 0);
+	fscanf(fp, "%s %s", ServerIP, Port);
+	fclose(fp);
+	sprintf(webaddr, "http://%s:%s/", ServerIP, Port);
+	ShellExecute(NULL, _T("open"), webaddr, NULL, NULL, SW_SHOWNORMAL);
 }
 
 void CMainClientDlg::On32772()
 {
-	ShellExecute(NULL, _T("open"), "http://114.115.244.171/loginScanSelf", NULL, NULL, SW_SHOWNORMAL);
+	char ServerIP[20], Port[10];
+	char webaddr[128];
+	FILE* fp = fopen("config.ini", "r");
+	if (fp == NULL)
+		MessageBox("缺少配置文件", "失败", 0);
+	fscanf(fp, "%s %s", ServerIP, Port);
+	fclose(fp);
+	sprintf(webaddr, "http://%s:%s/loginScanSelf", ServerIP, Port);
+	ShellExecute(NULL, _T("open"), webaddr, NULL, NULL, SW_SHOWNORMAL);
 }
