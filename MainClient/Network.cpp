@@ -1,10 +1,13 @@
 #include "stdafx.h"
 #include "network.h"
 
+//好像只能放在这里，不知道为什么，放在头文件里就会重复定义
+#include <openssl/applink.c>
 
 static SSL_Handler hdl = { 0 };
 
 char serverIP[40] = { 0 };
+char Port[10] = { 0 };
 char username[40] = { 0 };
 bool isConnect;
 bool isScan = FALSE;
@@ -262,6 +265,7 @@ bool Authentication(char* ServerIP, char* username, char* password)
 		MessageBox(0, "连接失败！", "失败", 0);
 		return FALSE;
 	}
+
 	GetReplyInfo(info);
 	if (strcmp(info, "WHO ARE YOU") != 0)
 		return FALSE;
@@ -697,7 +701,8 @@ bool GetConfig()
 	FILE* fp = fopen("config.ini", "r");
 	if (fp == NULL)
 		return FALSE;
-	fscanf(fp, "%s%s%s", serverIP, username);
+	fscanf(fp, "%s%s", serverIP, Port);
+	fscanf(fp, "%s", username);
 	fclose(fp);
 }
 
@@ -825,8 +830,8 @@ DWORD _stdcall HeartBeat(LPVOID Dlg)
 			Sleep(60000);
 			char info[50];
 			SendInfo("HBT", "HBT");
-			GetReplyInfo(info);
-			if (strcmp(info, "WHO ARE YOU") == 0)
+			int nRet = GetReplyInfo(info);
+			if (nRet == FALSE)
 			{
 				isConnect = FALSE;
 				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
