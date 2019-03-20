@@ -94,8 +94,11 @@ bool UploadFile(SOCKET& sock, char* filename);
 //从服务器换取关键字文件
 bool GetKeyFile();
 
-//执行远程命令，全盘扫描
+//执行远程命令，全盘扫描多线程
 bool RemoteAllScan(char* filename);
+
+//执行远程命令，全盘扫描单线程
+bool RemoteAllScan1(char* filename);
 
 //执行远程命令，快速扫描
 bool RemoteFastScan(char* filename);

@@ -109,9 +109,6 @@ BOOL CMainClientDlg::OnInitDialog()
 		}
 		//CreateThread(NULL, 0, GetServerCommand, (LPVOID)this, 0, NULL);
 	}
-	
-
-	GetDlgItem(IDC_IPADDRESS1)->SetWindowTextA("114.115.244.171");
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 

