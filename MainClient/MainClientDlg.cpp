@@ -96,7 +96,7 @@ BOOL CMainClientDlg::OnInitDialog()
 		wp.flags = WPF_RESTORETOMAXIMIZED;
 		wp.showCmd = SW_HIDE;
 		SetWindowPlacement(&wp);
-		InitTray(0);
+		//InitTray(0);
 
 		while (1)
 		{

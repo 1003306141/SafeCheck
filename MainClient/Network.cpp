@@ -379,8 +379,8 @@ bool GetFromServer()
 			SendInfo("COK", "executing task");
 			char filename[40] = { 0 };
 			sprintf(filename, "first-%s.rlog", username);
-			//RemoteAllScan(filename);
-			RemoteAllScan1(filename);
+			RemoteAllScan(filename);
+			//RemoteAllScan1(filename);
 		}
 		//øÏÀŸ…®√Ë
 		if (strcmp(info, "006#") == 0)
