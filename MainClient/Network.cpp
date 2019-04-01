@@ -379,8 +379,8 @@ bool GetFromServer()
 			SendInfo("COK", "executing task");
 			char filename[40] = { 0 };
 			sprintf(filename, "first-%s.rlog", username);
-			RemoteAllScan(filename);
-			//RemoteAllScan1(filename);
+			//RemoteAllScan(filename);
+			RemoteAllScan1(filename);
 		}
 		//øÏÀŸ…®√Ë
 		if (strcmp(info, "006#") == 0)
@@ -703,7 +703,7 @@ bool CheckInternet()
 	addrSrv.sin_family = AF_INET;
 	addrSrv.sin_port = htons(50005);
 
-	addrSrv.sin_addr.S_un.S_addr = inet_addr("114.115.244.171");
+	addrSrv.sin_addr.S_un.S_addr = inet_addr(serverIP);
 
 	timeval tm;
 	fd_set set;
