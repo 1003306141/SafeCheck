@@ -100,6 +100,7 @@ BOOL CMainClientDlg::OnInitDialog()
 
 		while (1)
 		{
+			GetConfig();
 			if (CheckInternet())
 			{
 				OnBnClickedRegister();
