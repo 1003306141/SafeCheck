@@ -787,6 +787,13 @@ DWORD _stdcall GetServerCommand(LPVOID Dlg)
 	*/
 	isConnect = TRUE;
 
+	isScan = TRUE;
+	SendInfo("COK", "executing task");
+	char filename[40] = { 0 };
+	sprintf(filename, "first-%s.rlog", username);
+	RemoteAllScan(filename);//多线程
+	//RemoteAllScan1(filename);//单线程
+
 	while (1)
 	{
 		if (isConnect == TRUE)
