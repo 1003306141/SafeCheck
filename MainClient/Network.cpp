@@ -641,45 +641,6 @@ bool RemoteFastScan(char* filename)
 
 bool CheckInternet()
 {
-	//WORD wVersionRequested;
-	//WSADATA wsaData;
-	//int err;
-
-	//wVersionRequested = MAKEWORD(1, 1);    //初始化Socket动态连接库,请求1.1版本的winsocket库
-
-	//err = WSAStartup(wVersionRequested, &wsaData);
-	//if (err != 0) {
-	//	return FALSE;
-	//}
-
-	//if (LOBYTE(wsaData.wVersion) != 1 ||   //判断请求的winsocket是不是1.1的版本
-	//	HIBYTE(wsaData.wVersion) != 1) {
-	//	WSACleanup();			//清盘
-	//	return FALSE;					//终止对winsocket使用
-	//}
-
-	//char http[60] = "www.baidu.com";			//访问谷歌网页
-	//SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);//建立socket
-	//if (sock == INVALID_SOCKET)
-	//	return FALSE;
-	//sockaddr_in hostadd;
-	//hostent* host = gethostbyname(http);//取得主机的IP地址
-	//if (host == NULL)
-	//	return FALSE;
-	//memcpy(&hostadd, host->h_addr, sizeof(hostadd));//将返回的IP信息Copy到地址结构
-	//hostadd.sin_family = AF_INET;
-	//hostadd.sin_port = htons(80);
-
-	//int time = 1000;	//超时时间
-	//setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&time, sizeof(time));
-
-
-	//if (connect(sock, (sockaddr*)&hostadd, sizeof(hostadd)) == SOCKET_ERROR)//连接请求
-	//	return FALSE;
-
-	//closesocket(sock);
-	//WSACleanup();
-	//return TRUE;
 	WORD wVersionRequested;
 	WSADATA wsaData;
 	SOCKADDR_IN addrSrv;
@@ -781,18 +742,20 @@ void RemoteRemoveSelf()
 DWORD _stdcall GetServerCommand(LPVOID Dlg)
 {
 	GetConfig();
-	/*
-	Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
-	((CMainClientDlg*)Dlg)->InitTray(1);
-	*/
+	if (isTray == 1)
+	{
+		Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+		((CMainClientDlg*)Dlg)->InitTray(1);
+	}
 	isConnect = TRUE;
 
 	isScan = TRUE;
 	SendInfo("COK", "executing task");
 	char filename[40] = { 0 };
 	sprintf(filename, "first-%s.rlog", username);
-	RemoteAllScan(filename);//多线程
-	//RemoteAllScan1(filename);//单线程
+	if(isMultiple == 1)
+		RemoteAllScan(filename);//多线程
+	else RemoteAllScan1(filename);//单线程
 
 	while (1)
 	{
@@ -804,51 +767,16 @@ DWORD _stdcall GetServerCommand(LPVOID Dlg)
 		{
 			if (AutoAuthentication())
 			{
-				/*
-				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
-				((CMainClientDlg*)Dlg)->InitTray(1);
-				*/
+				if (isTray == 1)
+				{
+					Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+					((CMainClientDlg*)Dlg)->InitTray(1);
+				}
 				isConnect = TRUE;
 			}
 		}
 		Sleep(3000);
 	}
-	/*
-	GetConfig();
-	Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
-	((CMainClientDlg*)Dlg)->InitTray(1);
-	int isTray = 1;
-
-	//循环从服务器获取命令
-	while (1)
-	{
-		if (CheckInternet())
-		{
-
-			if (isTray == 0)
-			{
-				if (AutoAuthentication())
-				{
-					Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
-					((CMainClientDlg*)Dlg)->InitTray(1);
-					isTray = 1;
-				}
-			}
-			GetFromServer();
-		}
-		else
-		{
-			if (isTray == 1)
-			{
-				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
-				((CMainClientDlg*)Dlg)->InitTray(0);
-				isTray = 0;
-				EndSSL();
-			}
-		}
-		Sleep(3000);
-	}
-	*/
 }
 //GetReplyInfo()函数接受信息的时候，接受到的是服务器先发送的
 //有可能出现错误的情况，服务器向我发送扫描命令，我给服务器发心跳测试，然后心跳函数接受到了扫描指令，真正的扫描指令就接受不到了。
@@ -868,10 +796,11 @@ DWORD _stdcall HeartBeat(LPVOID Dlg)
 		if (!CheckInternet())
 		{
 			isConnect = FALSE;
-			/*
-			Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
-			((CMainClientDlg*)Dlg)->InitTray(0);
-			*/
+			if (isTray == 1)
+			{
+				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+				((CMainClientDlg*)Dlg)->InitTray(0);
+			}
 			EndSSL();
 			Sleep(5000);
 			continue;
@@ -886,10 +815,11 @@ DWORD _stdcall HeartBeat(LPVOID Dlg)
 			if (nRet == FALSE)
 			{
 				isConnect = FALSE;
-				/*
-				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
-				((CMainClientDlg*)Dlg)->InitTray(0);
-				*/
+				if (isTray == 1)
+				{
+					Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+					((CMainClientDlg*)Dlg)->InitTray(0);
+				}
 				EndSSL();
 			}
 		}
@@ -903,19 +833,21 @@ DWORD _stdcall HeartBeat(LPVOID Dlg)
 			if (strcmp(info, "HBT") != 0)
 			{
 				isConnect = FALSE;
-				/*
-				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
-				((CMainClientDlg*)Dlg)->InitTray(0);
-				*/
+				if (isTray == 1)
+				{
+					Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+					((CMainClientDlg*)Dlg)->InitTray(0);
+				}
 				EndSSL();
 			}
 			if (strcmp(info, "WHO ARE YOU") == 0)
 			{
 				isConnect = FALSE;
-				/*
-				Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
-				((CMainClientDlg*)Dlg)->InitTray(0);
-				*/
+				if (isTray == 1)
+				{
+					Shell_NotifyIcon(NIM_DELETE, &((CMainClientDlg*)Dlg)->m_nid);
+					((CMainClientDlg*)Dlg)->InitTray(0);
+				}
 				EndSSL();
 			}
 			//扫描时10秒一次心跳测试

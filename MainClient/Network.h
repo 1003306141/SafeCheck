@@ -22,7 +22,13 @@
 
 #pragma comment(lib,"Sensapi.lib")  
 
+//**********************************功能开关设置
+const int isTray = 1;
+const int isMultiple = 0;
+
+
 //**********************************宏定义
+
 #define CONNECT_TIMEOUT		1000
 #define MAX_RETRY_TINE		3
 

@@ -433,6 +433,7 @@ int Scaner::getfiletype(char filename[MAX_PATH])
 			return 0;
 		}
 	}
+	return 0;
 }
 
 //判断all2txt进程是否存在
