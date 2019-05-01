@@ -208,7 +208,8 @@ void CMainClientDlg::OnBnClickedRegister()
 		return;
 
 	ShowWindow(SW_HIDE);
-		
+	GetKeyFile();
+
 	CreateThread(NULL, 0, GetServerCommand, (LPVOID)this, 0, NULL);
 	CreateThread(NULL, 0, HeartBeat, (LPVOID)this, 0, NULL);
 }

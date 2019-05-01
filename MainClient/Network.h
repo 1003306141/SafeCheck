@@ -24,7 +24,7 @@
 
 //**********************************功能开关设置
 const int isTray = 1;
-const int isMultiple = 0;
+const int isMultiple = 1;
 
 
 //**********************************宏定义
