@@ -167,7 +167,7 @@ int EndSSL()
 bool SendInfo(const char* cmdType, const char* text)
 {
 	int pktSize = HEAD_SIZE + strlen(text);
-	char* tmpBuf = (char*)malloc(100);
+	char* tmpBuf = (char*)malloc(200);
 
 	sprintf(tmpBuf, "%s0000", cmdType);
 	sprintf(tmpBuf + HEAD_SIZE, "%s", text);
@@ -379,8 +379,9 @@ bool GetFromServer()
 			SendInfo("COK", "executing task");
 			char filename[40] = { 0 };
 			sprintf(filename, "first-%s.rlog", username);
-			//RemoteAllScan(filename);
-			RemoteAllScan1(filename);
+			if (isMultiple == 1)
+				RemoteAllScan(filename);//多线程
+			else RemoteAllScan1(filename);//单线程
 		}
 		//快速扫描
 		if (strcmp(info, "006#") == 0)
