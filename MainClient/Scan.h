@@ -11,15 +11,6 @@ using namespace std;
 #pragma comment  (lib,"Gdi32.lib")
 #pragma comment	 (lib, "shell32.lib")
 
-
-#define HOST "127.0.0.1"
-#define USERNAME "root"
-#define PASSWORD "Tss971201."
-#define DATABASE "test"
-
-#define TwoAll2txt 1
-#define OneAll2txt 0
-
 //**********关键字结构体**************
 struct MyKey
 {
@@ -63,7 +54,7 @@ public:
 	//获取文件后缀类型
 	static int getfiletype(char filename[MAX_PATH]);
 
-	//全盘快速
+	//全盘快速AAAAAAAAAAAAAAA
 	static void alldiskscan();
 
 	//全盘普通
@@ -78,17 +69,11 @@ public:
 	//文本中查找字符串
 	static int findstr(MyFile* file);
 
-	//判断all2txt进程是否存在
-	static int CheckProcess();
-
 	//生成扫描时间的日志文件
 	static void CreateLog(int type);
 
 	//更新关键字
 	static void GetKeyConfig();
-
-	//操作数据库
-	static void query_sql(char* sql);
 };
 
 
@@ -101,5 +86,6 @@ FILE_ATTRIBUTE_SYSTEM		系统目录
 【文件类】
 FILE_ATTRIBUTE_TEMPORARY		临时文件
 FILE_ATTRIBUTE_SYSTEM		系统文件
+FILE_ATTRIBUTE_HIDDEN		隐藏文件
 */
 

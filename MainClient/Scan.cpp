@@ -436,27 +436,6 @@ int Scaner::getfiletype(char filename[MAX_PATH])
 	return 0;
 }
 
-//判断all2txt进程是否存在
-int Scaner::CheckProcess()
-{
-	HANDLE procSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	if (procSnap == INVALID_HANDLE_VALUE)
-		return 0;
-
-	PROCESSENTRY32 procEntry = { 0 };
-	procEntry.dwSize = sizeof(PROCESSENTRY32);
-	BOOL bRet = Process32First(procSnap, &procEntry);
-	int count = 0;
-	while (bRet)
-	{
-		if (strcmp("a2tcmd.exe", procEntry.szExeFile) == 0)
-			count++;
-		bRet = Process32Next(procSnap, &procEntry);
-	}
-	CloseHandle(procSnap);
-	return count;
-}
-
 //生成扫描时间的日志文件
 void Scaner::CreateLog(int type)
 {
