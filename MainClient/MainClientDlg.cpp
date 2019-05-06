@@ -7,6 +7,7 @@
 #include "MainClientDlg.h"
 #include "afxdialogex.h"
 #include "Network.h"
+#include <Dbt.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -322,4 +323,54 @@ void CMainClientDlg::On32772()
 	fclose(fp);
 	sprintf(webaddr, "http://%s:%s/loginScanSelf", ServerIP, Port);
 	ShellExecute(NULL, _T("open"), webaddr, NULL, NULL, SW_SHOWNORMAL);
+}
+
+LRESULT CMainClientDlg::OnDeviceChange(WPARAM wParam, LPARAM lParam)
+{
+	switch (wParam)
+	{
+	case DBT_DEVICEARRIVAL:
+	{
+		PDEV_BROADCAST_HDR lpdb = (PDEV_BROADCAST_HDR)lParam;
+		if (DBT_DEVTYP_VOLUME == lpdb->dbch_devicetype)
+		{
+			PDEV_BROADCAST_VOLUME lpdbv = (PDEV_BROADCAST_VOLUME)lpdb;
+			DWORD dwDriverMask = lpdbv->dbcv_unitmask;
+			DWORD dwTemp = 1;
+			char szDriver[4] = "A:\\";
+			for (szDriver[0] = 'A'; szDriver[0] <= 'Z'; szDriver[0]++)
+			{
+				if (0 < (dwTemp & dwDriverMask))
+				{
+					::MessageBox(NULL, szDriver, "设备已插入", MB_OK);
+				}
+				dwTemp = (dwTemp << 1);
+			}
+		}
+	}break;
+
+	case DBT_DEVICEREMOVECOMPLETE:
+	{
+		PDEV_BROADCAST_HDR lpdb = (PDEV_BROADCAST_HDR)lParam;
+		if (DBT_DEVTYP_VOLUME == lpdb->dbch_devicetype)
+		{
+			PDEV_BROADCAST_VOLUME lpdbv = (PDEV_BROADCAST_VOLUME)lpdb;
+			DWORD dwDriverMask = lpdbv->dbcv_unitmask;
+			DWORD dwTemp = 1;
+			char szDriver[4] = "A:\\";
+			for (szDriver[0] = 'A'; szDriver[0] <= 'Z'; szDriver[0]++)
+			{
+				if (0 < (dwTemp & dwDriverMask))
+				{
+					::MessageBox(NULL, szDriver, "设备已拔出", MB_OK);
+				}
+				dwTemp = (dwTemp << 1);
+			}
+		}
+	}break;
+
+	default:
+		break;
+	}
+	return 0;
 }

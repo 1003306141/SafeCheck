@@ -50,5 +50,8 @@ public:
 	afx_msg void On32771();
 	//用户登录
 	afx_msg void On32772();
+
+public:
+	afx_msg LRESULT OnDeviceChange(WPARAM, LPARAM);
 };
 
