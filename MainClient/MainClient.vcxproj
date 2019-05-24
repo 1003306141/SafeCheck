@@ -191,8 +191,10 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="kmp_main.h" />
     <ClInclude Include="MainClient.h" />
     <ClInclude Include="MainClientDlg.h" />
+    <ClInclude Include="Monitor.h" />
     <ClInclude Include="Network.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Scan.h" />
@@ -200,8 +202,10 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="kmp_main.cpp" />
     <ClCompile Include="MainClient.cpp" />
     <ClCompile Include="MainClientDlg.cpp" />
+    <ClCompile Include="Monitor.cpp" />
     <ClCompile Include="Network.cpp" />
     <ClCompile Include="Scan.cpp" />
     <ClCompile Include="stdafx.cpp">

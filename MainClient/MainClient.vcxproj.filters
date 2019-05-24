@@ -36,6 +36,12 @@
     <ClInclude Include="Scan.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="kmp_main.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Monitor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MainClient.cpp">
@@ -51,6 +57,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Scan.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="kmp_main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Monitor.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

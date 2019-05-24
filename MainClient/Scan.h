@@ -89,3 +89,4 @@ FILE_ATTRIBUTE_SYSTEM		系统文件
 FILE_ATTRIBUTE_HIDDEN		隐藏文件
 */
 
+string GBKToUTF8(const char* strGBK);

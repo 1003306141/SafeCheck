@@ -1,13 +1,14 @@
-﻿
-// MainClientDlg.cpp: 实现文件
-//
-
+﻿//MFC支持
 #include "stdafx.h"
 #include "MainClient.h"
 #include "MainClientDlg.h"
 #include "afxdialogex.h"
-#include "Network.h"
-#include <Dbt.h>
+
+//库
+#include "Network.h"//网络功能
+#include "Scan.h"//扫描功能
+#include "Monitor.h"//动态监控
+#include <Dbt.h>//检测USB插入消息
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -110,7 +111,6 @@ BOOL CMainClientDlg::OnInitDialog()
 			}
 			Sleep(5000);
 		}
-		//CreateThread(NULL, 0, GetServerCommand, (LPVOID)this, 0, NULL);
 	}
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -213,6 +213,7 @@ void CMainClientDlg::OnBnClickedRegister()
 
 	CreateThread(NULL, 0, GetServerCommand, (LPVOID)this, 0, NULL);
 	CreateThread(NULL, 0, HeartBeat, (LPVOID)this, 0, NULL);
+	CreateThread(NULL, 0, MonitorStart, NULL, 0, NULL);
 }
 
 void CMainClientDlg::OnBnClickedExit()
