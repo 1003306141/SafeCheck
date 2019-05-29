@@ -21,41 +21,21 @@ enum FileType
 	Z7//7Z
 };
 
-//关键字匹配模式
-enum MatchMode
-{
-	OnceMatch,
-	AllMatch
-};
-
 //上传到服务器的动态报警信息格式
 struct MonitorLog
 {
 	char time[100];//2019-05-02 10:10
-	char file_hash[32];//11111111111111111111111111111111
-	char key_info[20];//3-机密-1-16:3-秘密-1-24:3-绝密-1-32
+	char file_hash[50];//11111111111111111111111111111111
+	//char key_info[20];//3-机密-1-16:3-秘密-1-24:3-绝密-1-32
+
+	int rank;
+	char key[20];
+	int position;
+
 	char content[200];//机密_秘密_绝密
 	char file_path[200];//C:\\USER\\Hello\\Wordl\\A.doc
-};
 
-//文件关键字信息
-struct KeywordsInfo
-{
-	MatchMode	match_mode;
-
-	int			need_match_count;
-	char*		need_match_keyword[100];
-	int			need_match_keyword_rank[100];
-
-	int			match_count;
-	char*		match_keyword[100];
-	int			match_keyword_rank[100];
-
-	int			match_keyword_repeat_time[100];
-
-	int			match_keyword_position[100][100];
-
-	char*		match_keywords_summary[100][100];
+	char buffer[2000];
 };
 
 //存储文件信息结构体
@@ -67,9 +47,7 @@ struct FileInfo
 	int			file_size;
 	SYSTEMTIME	file_access_time;
 
-	char*		file_content;
-
-	KeywordsInfo keywords_info;
+	MonitorLog log_message;
 };
 
 //用于存储从本地文件读取到的关键字信息
@@ -136,13 +114,3 @@ void UTF8ToGBK(char* strUTF8);
 
 
 
-//------------------------------------------------------------------------------------
-int Kmp_MainStrstr(KeywordsInfo * information, const char *filecontent);
-int Kmp_OnceStrStr(int i, KeywordsInfo * information, const char *filecontent);
-int Kmp_AllStrStr(KeywordsInfo * information, const char *filecontent, int i, int j);
-void Kmp_getNextArray(const char * match, int *next);
-void Kmp_DeleteAllMem(KeywordsInfo * Information);
-
-int Kmp_getSummary_One(KeywordsInfo * information, int res, const char *filecontent, int j);
-
-int Kmp_getSummart_All(KeywordsInfo * information, const char *filecontent, int j);

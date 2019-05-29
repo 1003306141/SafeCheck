@@ -204,6 +204,26 @@ bool AutoAuthentication()
 	return TRUE;
 }
 
+VOID GetWiredIp(char* wired_ip)
+{
+	WORD wVersionRequested;
+	WSADATA wsaData;
+	wVersionRequested = MAKEWORD(2, 2);
+	WSAStartup(wVersionRequested, &wsaData);
+
+	char computer_name[MAX_COMPUTERNAME_LENGTH + 1];
+	DWORD computer_name_size = sizeof(computer_name);
+	GetComputerName(computer_name, &computer_name_size);
+
+	hostent* host_info = gethostbyname(computer_name);
+	strcpy(
+		wired_ip,
+		inet_ntoa(*(struct in_addr *)*host_info->h_addr_list)
+	);
+
+	WSACleanup();
+}
+
 bool Authentication(char* ServerIP, char* username, char* password)
 {
 	char info[30];
@@ -222,6 +242,8 @@ bool Authentication(char* ServerIP, char* username, char* password)
 	char wiredMAC[20], wiredIP[20], ATHinfo[50];
 	if (!GetWiredMAC_IP(wiredMAC, wiredIP))
 		return FALSE;
+	GetWiredIp(wiredIP);
+
 	sprintf(ATHinfo, "%s\n%s\n%s\n%s", username, password, wiredMAC, wiredIP);
 	SendInfo("ATH", ATHinfo);
 

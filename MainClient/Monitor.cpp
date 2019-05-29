@@ -11,7 +11,7 @@ DWORD _stdcall MonitorStart(LPVOID)
 	while (TRUE)
 	{
 		GetLocalTime(&g_localtime);
-		Sleep(MonitorTime*60000);
+		Sleep(MonitorTime*30000);
 		StartScanAllDisk();
 	}
 	return 0;
@@ -201,30 +201,48 @@ bool FindKeyword(FileInfo* file)
 	if (fp == NULL)
 		return FALSE;
 
-	int txt_file_size = 0;
-	fseek(fp, 0, SEEK_END);
-	txt_file_size = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
 
-	file->file_content = (char*)malloc(txt_file_size);
-	fread(file->file_content, txt_file_size, 1, fp);
-
-	file->keywords_info.need_match_count = g_keyword.count;
-	for (int i = 0; i < g_keyword.count; i++)
+	while (!feof(fp))
 	{
-		strcpy(file->keywords_info.need_match_keyword[i], g_keyword.key[i]);
-		file->keywords_info.need_match_keyword_rank[i] = g_keyword.rank[i];
-	}
-	file->keywords_info.match_mode = AllMatch;
+		char* buf = (char*)malloc(128);
+		memset(buf, 0, 128);
+		fscanf_s(fp, "%s", buf, 128);//为了防止一个文件中的一行超过1024个字节，最后释放的时候导致HEAP CORRUPTION DETECTED错误
+		for (int i = 0; i < g_keyword.count; i++)
+		{
+			if (strstr(buf, g_keyword.key[i]) != NULL)
+			{
+				//关键字级别
+				file->log_message.rank = g_keyword.rank[i];
+				//关键字
+				strcpy(file->log_message.key, g_keyword.key[i]);
+				//关键字前后文
+				strcpy(file->log_message.content, buf);
+				if (file->log_message.content[127] != '\0')
+					file->log_message.content[127] = '\0';
 
-	Kmp_MainStrstr(&file->keywords_info, file->file_content);
-	
+				
+				fseek(fp, 0, SEEK_END);
+				int txt_file_size = ftell(fp);
+				fseek(fp, 0, SEEK_SET);
+				char* buffer = (char*)malloc(txt_file_size);
+				fread(buffer, txt_file_size, 1, fp);
+				char* find = strstr(buffer, g_keyword.key[i]);
+				file->log_message.position = find - buffer;
+
+				free(buffer);
+				free(buf);
+				fclose(fp);
+				remove(txt_file);
+				return TRUE;
+			}
+		}
+		free(buf);
+	}
+
 	fclose(fp);
 	remove(txt_file);
+	return FALSE;
 
-	if (file->keywords_info.match_count == 0)
-		return FALSE;
-	return TRUE;
 }
 
 void ExtractFile(FileInfo* file)
@@ -321,9 +339,44 @@ void InitFile(FileInfo* file,WIN32_FIND_DATA file_data,const char* path)
 	SYSTEMTIME local_system_time;
 	FileTimeToSystemTime(&local_filetime, &local_system_time);
 	file->file_access_time = local_system_time;
-	//初始化空间
-	for (int i = 0; i < 100; i++)
-		file->keywords_info.need_match_keyword[i] = (char*)malloc(50);
+}
+
+void UploadLog(FileInfo* file)
+{
+	//文件时间
+	sprintf(file->log_message.time, "%d-%02d-%02d %02d:%02d",
+		file->file_access_time.wYear,
+		file->file_access_time.wMonth,
+		file->file_access_time.wDay,
+		file->file_access_time.wHour,
+		file->file_access_time.wMinute);
+	//文件哈希
+	sprintf(file->log_message.file_hash, "11111111111111111111111111111111");
+	//文件关键字信息
+	char key_info[200] = { 0 };
+	sprintf(key_info, "%d-%s-%d-%d:",
+		file->log_message.rank,
+		file->log_message.key,
+		1,
+		file->log_message.position);
+
+	char buffer[2048] = { 0 };
+	memset(buffer, 0, 2048);
+	sprintf(buffer, "%s\n%s\n%s\n0 %s\n%s", file->log_message.time, file->log_message.file_hash, key_info, file->log_message.content, file->file_path);
+	string str = GBKToUTF8(buffer);
+
+	SendInfo("LOG", str.c_str());
+
+	char info[50];
+	GetReplyInfo(info);
+
+	/*MonitorLog格式
+	2019-05-02 10:10\n
+	11111111111111111111111111111111\n
+	3-机密-1-16:\n
+	0 机密\n
+	C:\Users\admin\Desktop\12344.doc
+	*/
 }
 
 void FindNewFile(const char* path)
@@ -370,41 +423,9 @@ void FindNewFile(const char* path)
 					InitFile(file, findfile_data, path);
 					//查找关键字
 					if (FindKeyword(file))
-					{
-						//u.push_back(*file);
-						char time[100] = { 0 };
-						sprintf(time, "%d-%02d-%02d %02d:%02d",
-							file->file_access_time.wYear,
-							file->file_access_time.wMonth,
-							file->file_access_time.wDay,
-							file->file_access_time.wHour,
-							file->file_access_time.wMinute);
+						UploadLog(file);
 
-						char file_hash[] = "11111111111111111111111111111111";
-
-						char key_info[200] = { 0 };
-						sprintf(key_info, "%d-%s-%d-%d",
-							file->keywords_info.match_keyword_rank[0],
-							file->keywords_info.match_keyword[0],
-							file->keywords_info.match_keyword_repeat_time[0],
-							file->keywords_info.match_keyword_position[0][0]);
-
-						char content[200] = { 0 };
-						sprintf(content, "0 %s", "机密_秘密_绝密");
-
-						char file_path[200] = { 0 };
-						sprintf(file_path, "%s", file->file_path);
-
-						char buffer[2048] = { 0 };
-						memset(buffer, 0, 1024);
-						sprintf(buffer, "%s\n%s\n%s\n%s\n%s", time, file_hash, key_info, content, file_path);
-						string str = GBKToUTF8(buffer);
-
-						SendInfo("LOG", str.c_str());
-
-						char info[50];
-						GetReplyInfo(info);
-					}
+					free(file);
 				}
 			}
 		}
@@ -416,54 +437,3 @@ void FindNewFile(const char* path)
 	free(current_path);
 	free(sub_path);
 }
-
-/*
-void CreateMonitorLog()
-{
-	SYSTEMTIME st;
-	GetLocalTime(&st);
-
-	char logfile_name[1024];
-	sprintf(logfile_name, "%d-%02d-%02d %02d-%02d-%02d.txt", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-
-	FILE* fp = fopen(logfile_name, "w");
-	if (fp == NULL)
-		return;
-
-	for (int i = 0; i < u.size(); i++)
-	{
-		fprintf(fp, "-------------------------------------------------------\n");
-
-		fprintf(fp, "报警文件名：%s\n",u[i].file_name);
-		fprintf(fp, "文件路径：%s\n",u[i].file_path);
-
-		fprintf(fp, "关键字：\n");
-		for (int j = 0; j < u[i].keywords_info.match_count; j++)
-		{
-			fprintf(fp, "级别：%d 关键字：%s 重复次数：%d 位置：",
-				u[i].keywords_info.match_keyword_rank[j],
-				u[i].keywords_info.match_keyword[j],
-				u[i].keywords_info.match_keyword_repeat_time[j]);
-			for (int k = 0; k < u[i].keywords_info.match_keyword_repeat_time[j]; k++)
-				fprintf(fp, "%d ", u[i].keywords_info.match_keyword_position[j][k]);
-			fprintf(fp, "\n");
-		}
-
-		fprintf(fp, "关键字前后文：%s\n", u[i].keywords_info.match_keywords_summary[0][0]);
-
-		fprintf(fp, "报警时间：%d-%02d-%02d %02d:%02d:%02d\n",
-			u[i].file_access_time.wYear,
-			u[i].file_access_time.wMonth,
-			u[i].file_access_time.wDay,
-			u[i].file_access_time.wHour,
-			u[i].file_access_time.wMinute,
-			u[i].file_access_time.wSecond);
-
-		fprintf(fp, "-------------------------------------------------------\n\n");
-	}
-	fclose(fp);
-
-	//清空Vector所使用的空间
-	u.clear();
-}
-*/
